@@ -1,0 +1,22 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.example.jjf.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "jjf.refmap.json",
+  "mixins": [
+    "LivingEntityMixin",
+    "CrossbowItemMixin",
+    "BowItemMixin"
+  ],
+  "client": [
+    "LocalPlayerMixin",
+    "KeyboardInputMixin",
+    "PlayerModelMixin",
+    "PlayerRendererMixin"
+  ],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

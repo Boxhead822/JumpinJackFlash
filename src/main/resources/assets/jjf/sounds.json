@@ -1,0 +1,12 @@
+{
+  "jumpin_jack_flash_summon": {
+    "sounds": [
+      "jjf:stand/jumpin_jack_flash_summon"
+    ]
+  },
+  "suction_launch": {
+    "sounds": [
+      "jjf:stand/suction_launch"
+    ]
+  }
+}
