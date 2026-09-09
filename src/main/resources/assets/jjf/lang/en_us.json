@@ -3,5 +3,22 @@
   "item.jjf.jumpin_jack_flash_disc.desc": "Jumpin' Jack Flash",
 
   "item.jjf.jumpin_jack_flash_disc_max": "Stand Disc+",
-  "item.jjf.jumpin_jack_flash_disc_max.desc": "Jumpin' Jack Flash"
+  "item.jjf.jumpin_jack_flash_disc_max.desc": "Jumpin' Jack Flash",
+
+  "ability.jjf.zero_gravity": "Zero Gravity",
+  "instruction.jjf.zero_gravity": "Press Z to toggle zero gravity",
+
+  "ability.jjf.spit": "Zero Gravity Spit",
+  "instruction.jjf.spit": "Press X to spread zero gravity",
+
+  "ability.jjf.load": "Load Launcher",
+  "instruction.jjf.load": "Hold V while holding ammunition",
+
+  "ability.jjf.unload": "Unload Launcher",
+  "instruction.jjf.unload": "Guard and press V to unload ammunition",
+
+  "ability.jjf.launcher": "Centrifugal Launcher",
+  "instruction.jjf.launcher": "Hold and release Use to fire loaded ammunition",
+
+  "instruction.jjf.dash": "Press C to dash"
 }

@@ -16,6 +16,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.entity.Pose;
 import com.example.jjf.registry.ModSounds;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Mob;
 
 public class ZeroGravitySystem {
 
@@ -38,6 +39,10 @@ public class ZeroGravitySystem {
     private static final double HORIZONTAL_BALANCE = 1.55D;
 
 
+    private static final double SPREAD_KNOCKBACK_HORIZONTAL = 1.85D;
+    private static final double SPREAD_KNOCKBACK_VERTICAL = 1.35D;
+
+
     public static void tickZeroGravity(LivingEntity entity) {
         if (!(entity instanceof ZeroGravityAccess access)) {
             return;
@@ -52,6 +57,12 @@ public class ZeroGravitySystem {
         state.incrementZeroGravityTicks();
         state.tickSwingImpulseCooldown();
 
+
+        if (state.getSource() == ZeroGravitySource.SPREAD
+                && !(entity instanceof Player)) {
+            tickSpreadMob(entity, state);
+        }
+
         entity.setNoGravity(true);
         entity.fallDistance = 0.0F;
 
@@ -61,7 +72,9 @@ public class ZeroGravitySystem {
         double y = motion.y;
         double z = motion.z;
 
-        if (state.getZeroGravityTicks() <= 10 && y > 0.04D) {
+        if (state.isSafeUserZeroGravity()
+                && state.getZeroGravityTicks() <= 10
+                && y > 0.04D) {
             y = 0.04D;
         }
 
@@ -88,6 +101,105 @@ public class ZeroGravitySystem {
                 && state.isSafeUserZeroGravity()) {
             tickSuction(player, state);
         }
+    }
+
+    public static void amplifySpreadKnockback(
+            LivingEntity entity
+    ) {
+        if (entity.level().isClientSide()) {
+            return;
+        }
+
+        if (!(entity instanceof ZeroGravityAccess access)) {
+            return;
+        }
+
+        ZeroGravityState state =
+                access.jjf$getZeroGravityState();
+
+        if (state.getSource() != ZeroGravitySource.SPREAD) {
+            return;
+        }
+
+        Vec3 motion =
+                entity.getDeltaMovement();
+
+        double x = clamp(
+                motion.x * SPREAD_KNOCKBACK_HORIZONTAL,
+                -MAX_HORIZONTAL_SPEED,
+                MAX_HORIZONTAL_SPEED
+        );
+
+        double y = clamp(
+                motion.y * SPREAD_KNOCKBACK_VERTICAL,
+                -MAX_VERTICAL_SPEED,
+                MAX_VERTICAL_SPEED
+        );
+
+        double z = clamp(
+                motion.z * SPREAD_KNOCKBACK_HORIZONTAL,
+                -MAX_HORIZONTAL_SPEED,
+                MAX_HORIZONTAL_SPEED
+        );
+
+        entity.setDeltaMovement(
+                x,
+                y,
+                z
+        );
+
+        entity.hasImpulse = true;
+        entity.hurtMarked = true;
+    }
+
+    private static void tickSpreadMob(
+            LivingEntity entity,
+            ZeroGravityState state
+    ) {
+        if (!(entity instanceof Mob mob)) {
+            return;
+        }
+
+        mob.getNavigation().stop();
+        mob.setZza(0.0F);
+        mob.setXxa(0.0F);
+        mob.setSpeed(0.0F);
+
+        if (state.getZeroGravityTicks() != 1) {
+            return;
+        }
+
+        Vec3 motion =
+                entity.getDeltaMovement();
+
+        if (motion.horizontalDistanceSqr() > 0.0025D) {
+            return;
+        }
+
+        Vec3 look =
+                entity.getLookAngle();
+
+        Vec3 direction =
+                new Vec3(
+                        look.x,
+                        0.0D,
+                        look.z
+                );
+
+        if (direction.lengthSqr() < 0.0001D) {
+            return;
+        }
+
+        direction =
+                direction.normalize();
+
+        entity.setDeltaMovement(
+                direction.x * 0.08D,
+                0.025D,
+                direction.z * 0.08D
+        );
+
+        entity.hasImpulse = true;
     }
 
 
@@ -182,6 +294,154 @@ public class ZeroGravitySystem {
         );
 
         player.hasImpulse = true;
+    }
+    public static void applyJJFPunchImpulse(
+            LivingEntity attacker,
+            LivingEntity target,
+            boolean heavy
+    ) {
+        if (!(target instanceof ZeroGravityAccess access)) {
+            return;
+        }
+
+        ZeroGravityState state =
+                access.jjf$getZeroGravityState();
+
+        if (state.getSource() != ZeroGravitySource.SPREAD) {
+            return;
+        }
+
+        Vec3 direction =
+                target.position()
+                        .subtract(attacker.position());
+
+        Vec3 horizontal =
+                new Vec3(
+                        direction.x,
+                        0.0D,
+                        direction.z
+                );
+
+        if (horizontal.lengthSqr() < 0.0001D) {
+            Vec3 look =
+                    attacker.getLookAngle();
+
+            horizontal =
+                    new Vec3(
+                            look.x,
+                            0.0D,
+                            look.z
+                    );
+        }
+
+        if (horizontal.lengthSqr() < 0.0001D) {
+            return;
+        }
+
+        horizontal =
+                horizontal.normalize();
+
+        double horizontalStrength =
+                heavy ? 0.42D : 0.22D;
+
+        double verticalStrength =
+                heavy ? 0.20D : 0.10D;
+
+        Vec3 motion =
+                target.getDeltaMovement();
+
+        target.setDeltaMovement(
+                clamp(
+                        motion.x
+                                + horizontal.x
+                                * horizontalStrength,
+                        -MAX_HORIZONTAL_SPEED,
+                        MAX_HORIZONTAL_SPEED
+                ),
+                clamp(
+                        motion.y
+                                + verticalStrength,
+                        -MAX_VERTICAL_SPEED,
+                        MAX_VERTICAL_SPEED
+                ),
+                clamp(
+                        motion.z
+                                + horizontal.z
+                                * horizontalStrength,
+                        -MAX_HORIZONTAL_SPEED,
+                        MAX_HORIZONTAL_SPEED
+                )
+        );
+
+        target.hasImpulse = true;
+        target.hurtMarked = true;
+    }
+
+    public static void applyLauncherImpactImpulse(
+            LivingEntity target,
+            Vec3 projectileMotion,
+            double strength
+    ) {
+        if (!(target instanceof ZeroGravityAccess access)) {
+            return;
+        }
+
+        ZeroGravityState state =
+                access.jjf$getZeroGravityState();
+
+        if (state.getSource()
+                != ZeroGravitySource.SPREAD) {
+            return;
+        }
+
+        if (projectileMotion.lengthSqr()
+                < 0.0001D) {
+            return;
+        }
+
+        Vec3 direction =
+                projectileMotion.normalize();
+
+        Vec3 current =
+                target.getDeltaMovement();
+
+        Vec3 impulse =
+                new Vec3(
+                        direction.x
+                                * strength
+                                * HORIZONTAL_BALANCE,
+                        direction.y
+                                * strength,
+                        direction.z
+                                * strength
+                                * HORIZONTAL_BALANCE
+                );
+
+        Vec3 result =
+                current.add(
+                        impulse
+                );
+
+        target.setDeltaMovement(
+                clamp(
+                        result.x,
+                        -MAX_HORIZONTAL_SPEED,
+                        MAX_HORIZONTAL_SPEED
+                ),
+                clamp(
+                        result.y,
+                        -MAX_VERTICAL_SPEED,
+                        MAX_VERTICAL_SPEED
+                ),
+                clamp(
+                        result.z,
+                        -MAX_HORIZONTAL_SPEED,
+                        MAX_HORIZONTAL_SPEED
+                )
+        );
+
+        target.hasImpulse = true;
+        target.hurtMarked = true;
     }
 
 

@@ -6,8 +6,11 @@
   "refmap": "jjf.refmap.json",
   "mixins": [
     "LivingEntityMixin",
+    "SpreadKnockbackMixin",
     "CrossbowItemMixin",
-    "BowItemMixin"
+    "BowItemMixin",
+    "PlayerMixin",
+    "ScreenMixin"
   ],
   "client": [
     "LocalPlayerMixin",

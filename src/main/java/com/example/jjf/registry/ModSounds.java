@@ -28,4 +28,25 @@ public class ModSounds {
                     () -> SoundEvent.createVariableRangeEvent(
                             ResourceLocation.fromNamespaceAndPath("jjf", "suction_launch")
                     ));
+    public static final RegistryObject<SoundEvent> LAUNCHER_SHOOT =
+            SOUND_EVENTS.register(
+                    "launcher_shoot",
+                    () -> SoundEvent.createVariableRangeEvent(
+                            ResourceLocation.fromNamespaceAndPath(
+                                    "jjf",
+                                    "launcher_shoot"
+                            )
+                    )
+            );
+
+    public static final RegistryObject<SoundEvent> LAUNCHER_BURST =
+            SOUND_EVENTS.register(
+                    "launcher_burst",
+                    () -> SoundEvent.createVariableRangeEvent(
+                            ResourceLocation.fromNamespaceAndPath(
+                                    "jjf",
+                                    "launcher_burst"
+                            )
+                    )
+            );
 }

@@ -44,8 +44,10 @@ import net.minecraftforge.event.entity.player.ArrowLooseEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import com.example.jjf.zero_gravity.ZeroGravityAccess;
 import com.example.jjf.zero_gravity.ZeroGravitySystem;
+import net.minecraft.client.renderer.entity.ThrownItemRenderer;
+import net.minecraft.client.renderer.entity.NoopRenderer;
+import com.example.jjf.client.models.stand.renderers.JJFSpitRenderer;
 
-// The value here should match an entry in the META-INF/mods.toml file
 @Mod(JJFMod.MODID)
 public class JJFMod
 {
@@ -54,13 +56,10 @@ public class JJFMod
     private static final Logger LOGGER = LogUtils.getLogger();
 
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MODID);
-    // Create a Deferred Register to hold Items which will all be registered under the "jjf" namespace
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MODID);
-    // Create a Deferred Register to hold CreativeModeTabs which will all be registered under the "jjf" namespace
 
-    // Creates a new Block with the id "jjf:example_block", combining the namespace and path
     public static final RegistryObject<Block> EXAMPLE_BLOCK = BLOCKS.register("example_block", () -> new Block(BlockBehaviour.Properties.of().mapColor(MapColor.STONE)));
-    // Creates a new BlockItem with the id "jjf:example_block", combining the namespace and path
+
     public static final RegistryObject<Item> EXAMPLE_BLOCK_ITEM = ITEMS.register("example_block", () -> new BlockItem(EXAMPLE_BLOCK.get(), new Item.Properties()));
 
 
@@ -102,19 +101,16 @@ public class JJFMod
 
         ModSounds.SOUND_EVENTS.register(modEventBus);
 
-        // Register ourselves for server and other game events we are interested in
         MinecraftForge.EVENT_BUS.register(this);
 
-        // Register the item to a creative tab
         modEventBus.addListener(this::addCreative);
 
-        // Register our mod's ForgeConfigSpec so that Forge can create and load the config file for us
         context.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event)
     {
-        // Some common setup code
+
         LOGGER.info("HELLO FROM COMMON SETUP");
 
         if (Config.logDirtBlock)
@@ -125,7 +121,7 @@ public class JJFMod
         Config.items.forEach((item) -> LOGGER.info("ITEM >> {}", item.toString()));
     }
 
-    // Add the example block item to the building blocks tab
+
     private void addCreative(BuildCreativeModeTabContentsEvent event)
     {
         if (event.getTab() == ForgeCreativeTab.WIP_GROUP.get()) {
@@ -134,25 +130,17 @@ public class JJFMod
         }
     }
 
-    // You can use SubscribeEvent and let the Event Bus discover methods to call
-    @SubscribeEvent
-    public void onServerStarting(ServerStartingEvent event)
-    {
-        // Do something when the server starts
-        LOGGER.info("HELLO from server starting");
-    }
 
-    // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
+
+
+
+
     @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static class ClientModEvents
     {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event)
-        {
-            // Some client setup code
-            LOGGER.info("HELLO FROM CLIENT SETUP");
-            LOGGER.info("MINECRAFT NAME >> {}", Minecraft.getInstance().getUser().getName());
-        }
+        {}
 
         @SubscribeEvent
         public static void registerRenderers(
@@ -161,6 +149,18 @@ public class JJFMod
             event.registerEntityRenderer(
                     ModEntities.JUMPIN_JACK_FLASH.get(),
                     JumpinJackFlashRenderer::new
+            );
+            event.registerEntityRenderer(
+                    ModEntities.JJF_PROJECTILE.get(),
+                    ThrownItemRenderer::new
+            );
+            event.registerEntityRenderer(
+                    ModEntities.JJF_GUNPOWDER_CLOUD.get(),
+                    NoopRenderer::new
+            );
+            event.registerEntityRenderer(
+                    ModEntities.JJF_SPIT.get(),
+                    JJFSpitRenderer::new
             );
         }
 
@@ -173,6 +173,7 @@ public class JJFMod
                     JumpinJackFlashModel::createBodyLayer
             );
         }
+
 
     }
 }
