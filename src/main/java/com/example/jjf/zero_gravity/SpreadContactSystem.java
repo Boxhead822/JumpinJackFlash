@@ -17,9 +17,13 @@ import java.util.UUID;
 public final class SpreadContactSystem {
 
     private static final int SPREAD_ARM_TICKS = 4;
+
+    private static final int SPREAD_DURATION_TICKS = 20 * 30;
+
+    private static final int RESTORATION_TICKS = 20;
+
     private static final double CONTACT_DISTANCE = 0.40D;
     private static final double CONTACT_PUSH = 0.045D;
-
     private SpreadContactSystem() {
     }
 
@@ -63,6 +67,21 @@ public final class SpreadContactSystem {
 
         if (sourceState.getSource()
                 != ZeroGravitySource.SPREAD) {
+            return;
+        }
+
+        if (sourceState.getZeroGravityTicks()
+                >= SPREAD_DURATION_TICKS) {
+
+            sourceState.clearZeroGravity();
+
+            sourceState.setRestorationTicks(
+                    RESTORATION_TICKS
+            );
+
+            source.setNoGravity(false);
+            source.fallDistance = 0.0F;
+
             return;
         }
 

@@ -1,96 +1,178 @@
 package com.example.jjf.mixin;
 
 import com.example.jjf.client.JJFHudSettings;
+import com.example.jjf.stand.powers.PowersJumpinJackFlash;
+import net.hydra.jojomod.client.gui.PowerInventoryScreen;
+import net.hydra.jojomod.event.powers.StandUser;
+import net.hydra.jojomod.util.config.ConfigManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.Renderable;
-import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.narration.NarratableEntry;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.sounds.SoundEvents;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(Screen.class)
+@Mixin(PowerInventoryScreen.class)
 public abstract class ScreenMixin {
 
-    @Shadow
-    protected abstract <
-            T extends GuiEventListener
-                    & Renderable
-                    & NarratableEntry
-            > T addRenderableWidget(T widget);
-
     @Inject(
-            method = "init(Lnet/minecraft/client/Minecraft;II)V",
+            method = "render",
             at = @At("TAIL")
     )
-    private void jjf$addSettingsButtons(
-            Minecraft minecraft,
-            int width,
-            int height,
+    private void jjf$renderHudSettings(
+            GuiGraphics context,
+            int mouseX,
+            int mouseY,
+            float delta,
             CallbackInfo ci
     ) {
-        Screen screen =
-                (Screen) (Object) this;
+        PowerInventoryScreen screen =
+                (PowerInventoryScreen) (Object) this;
 
-        if (!screen.getClass()
-                .getName()
-                .equals(
-                        "net.hydra.jojomod.client.gui.PowerInventoryScreen"
-                )) {
+        if (!jjf$showSettings(screen)) return;
+
+        int left = screen.getGuiLeft();
+        int top = screen.getGuiTop();
+
+        int x = left - 135;
+        int ammoY = top + 125;
+        int launcherY = top + 136;
+
+        boolean ammoHover =
+                jjf$isHovering(
+                        left - 136,
+                        top + 123,
+                        118,
+                        11,
+                        mouseX,
+                        mouseY
+                );
+
+        boolean launcherHover =
+                jjf$isHovering(
+                        left - 136,
+                        top + 134,
+                        118,
+                        11,
+                        mouseX,
+                        mouseY
+                );
+
+        context.drawString(
+                Minecraft.getInstance().font,
+                JJFHudSettings.ammoMessage(),
+                x,
+                ammoY,
+                ammoHover ? 0xFFFFFF : 0xA0A0A0,
+                false
+        );
+
+        context.drawString(
+                Minecraft.getInstance().font,
+                JJFHudSettings.launcherMessage(),
+                x,
+                launcherY,
+                launcherHover ? 0xFFFFFF : 0xA0A0A0,
+                false
+        );
+    }
+
+    @Inject(
+            method = "mouseClicked",
+            at = @At("HEAD"),
+            cancellable = true
+    )
+    private void jjf$clickHudSettings(
+            double mouseX,
+            double mouseY,
+            int button,
+            CallbackInfoReturnable<Boolean> cir
+    ) {
+        PowerInventoryScreen screen =
+                (PowerInventoryScreen) (Object) this;
+
+        if (button != 0 || !jjf$showSettings(screen)) return;
+
+        int left = screen.getGuiLeft();
+        int top = screen.getGuiTop();
+
+        if (jjf$isHovering(
+                left - 136,
+                top + 123,
+                118,
+                11,
+                mouseX,
+                mouseY
+        )) {
+            JJFHudSettings.toggleAmmoText();
+            jjf$clickSound();
+            cir.setReturnValue(true);
             return;
         }
 
-        int buttonWidth = 105;
-        int buttonHeight = 18;
+        if (jjf$isHovering(
+                left - 136,
+                top + 134,
+                118,
+                11,
+                mouseX,
+                mouseY
+        )) {
+            JJFHudSettings.toggleLauncherText();
+            jjf$clickSound();
+            cir.setReturnValue(true);
+        }
+    }
 
-        int x =
-                width / 2 - 20;
+    private boolean jjf$showSettings(
+            PowerInventoryScreen screen
+    ) {
+        Minecraft minecraft =
+                Minecraft.getInstance();
 
-        int y =
-                height / 2 ;
+        if (minecraft.player == null) return false;
 
-        addRenderableWidget(
-                Button.builder(
-                                JJFHudSettings.ammoMessage(),
-                                button -> {
-                                    JJFHudSettings.toggleAmmoText();
+        if (!screen.isOptionsOut) return false;
+        if (screen.pageNumber != 2) return false;
 
-                                    button.setMessage(
-                                            JJFHudSettings.ammoMessage()
-                                    );
-                                }
+        if (ConfigManager.getClientConfig()
+                .dynamicSettings
+                .currentPowerInventoryTab != 2) {
+            return false;
+        }
+
+        StandUser standUser =
+                (StandUser) minecraft.player;
+
+        return standUser.roundabout$getStandPowers()
+                instanceof PowersJumpinJackFlash;
+    }
+
+    private boolean jjf$isHovering(
+            int x,
+            int y,
+            int width,
+            int height,
+            double mouseX,
+            double mouseY
+    ) {
+        return mouseX >= x
+                && mouseX <= x + width
+                && mouseY >= y
+                && mouseY <= y + height;
+    }
+
+    private void jjf$clickSound() {
+        Minecraft.getInstance()
+                .getSoundManager()
+                .play(
+                        SimpleSoundInstance.forUI(
+                                SoundEvents.UI_BUTTON_CLICK,
+                                1.0F
                         )
-                        .bounds(
-                                x,
-                                y,
-                                buttonWidth,
-                                buttonHeight
-                        )
-                        .build()
-        );
-
-        addRenderableWidget(
-                Button.builder(
-                                JJFHudSettings.launcherMessage(),
-                                button -> {
-                                    JJFHudSettings.toggleLauncherText();
-
-                                    button.setMessage(
-                                            JJFHudSettings.launcherMessage()
-                                    );
-                                }
-                        )
-                        .bounds(
-                                x,
-                                y + 22,
-                                buttonWidth,
-                                buttonHeight
-                        )
-                        .build()
-        );
+                );
     }
 }

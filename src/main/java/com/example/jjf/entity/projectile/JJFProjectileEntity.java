@@ -830,40 +830,80 @@ public class JJFProjectileEntity extends ThrowableItemProjectile {
     }
 
     private void applyZeroGravityImpact(LivingEntity target) {
+
         if (!(target instanceof ZeroGravityAccess access)) {
             return;
         }
 
-        ZeroGravityState state = access.jjf$getZeroGravityState();
+        ZeroGravityState state =
+                access.jjf$getZeroGravityState();
 
-        if (state.getSource() != ZeroGravitySource.SPREAD) {
+
+        if (state.getSource()
+                != ZeroGravitySource.SPREAD) {
             return;
         }
 
-        Vec3 motion = getDeltaMovement();
+
+        Vec3 motion =
+                getDeltaMovement();
 
         if (motion.lengthSqr() < 0.0001D) {
             return;
         }
 
-        double strength = getZeroGravityImpactStrength();
-        Vec3 direction = motion.normalize();
-        Vec3 current = target.getDeltaMovement();
+        double strength =
+                getZeroGravityImpactStrength();
 
-        Vec3 result = current.add(
-                direction.x * strength * ZERO_G_HORIZONTAL_BALANCE,
-                direction.y * strength,
-                direction.z * strength * ZERO_G_HORIZONTAL_BALANCE
+        Vec3 direction =
+                motion.normalize();
+
+        Vec3 current =
+                target.getDeltaMovement();
+
+        Vec3 result =
+                current.add(
+                        direction.x
+                                * strength
+                                * ZERO_G_HORIZONTAL_BALANCE,
+
+                        direction.y
+                                * strength,
+
+                        direction.z
+                                * strength
+                                * ZERO_G_HORIZONTAL_BALANCE
+                );
+
+
+        double x = clamp(
+                result.x,
+                -ZERO_G_MAX_HORIZONTAL,
+                ZERO_G_MAX_HORIZONTAL
+        );
+
+        double y = clamp(
+                result.y,
+                -ZERO_G_MAX_VERTICAL,
+                ZERO_G_MAX_VERTICAL
+        );
+
+        double z = clamp(
+                result.z,
+                -ZERO_G_MAX_HORIZONTAL,
+                ZERO_G_MAX_HORIZONTAL
         );
 
         target.setDeltaMovement(
-                clamp(result.x, -ZERO_G_MAX_HORIZONTAL, ZERO_G_MAX_HORIZONTAL),
-                clamp(result.y, -ZERO_G_MAX_VERTICAL, ZERO_G_MAX_VERTICAL),
-                clamp(result.z, -ZERO_G_MAX_HORIZONTAL, ZERO_G_MAX_HORIZONTAL)
+                x,
+                y,
+                z
         );
 
         target.hasImpulse = true;
         target.hurtMarked = true;
+
+        target.fallDistance = 0.0F;
     }
 
     private double getZeroGravityImpactStrength() {

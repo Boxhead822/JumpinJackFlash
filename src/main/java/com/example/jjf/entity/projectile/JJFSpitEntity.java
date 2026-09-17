@@ -110,6 +110,12 @@ public class JJFSpitEntity extends ThrowableProjectile {
             return;
         }
 
+        if (state.getSource()
+                == ZeroGravitySource.SPREAD) {
+            discard();
+            return;
+        }
+
         state.setSource(
                 ZeroGravitySource.SPREAD
         );

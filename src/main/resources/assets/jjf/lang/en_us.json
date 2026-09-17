@@ -5,20 +5,33 @@
   "item.jjf.jumpin_jack_flash_disc_max": "Stand Disc+",
   "item.jjf.jumpin_jack_flash_disc_max.desc": "Jumpin' Jack Flash",
 
+  "ability.jjf.punch": "Punch",
+  "instruction.jjf.punch": "Press Attack",
+  "ability.jjf.punch.desc": "Throw a powerful close-range punch.",
+
+  "ability.jjf.guard": "Guard",
+  "instruction.jjf.guard": "Hold Block",
+  "ability.jjf.guard.desc": "Block incoming attacks with your Stand.",
+
   "ability.jjf.zero_gravity": "Zero Gravity",
-  "instruction.jjf.zero_gravity": "Press Z to toggle zero gravity",
+  "instruction.jjf.zero_gravity": "Press Z",
+  "ability.jjf.zero_gravity.desc": "Take away your own gravity and float freely.",
 
   "ability.jjf.spit": "Zero Gravity Spit",
-  "instruction.jjf.spit": "Press X to spread zero gravity",
+  "instruction.jjf.spit": "Press X",
+  "ability.jjf.spit.desc": "Spit at an enemy to make them lose their gravity.",
 
-  "ability.jjf.load": "Load Launcher",
-  "instruction.jjf.load": "Hold V while holding ammunition",
+  "ability.jjf.load": "Load Ammo",
+  "instruction.jjf.load": "Hold V",
+  "ability.jjf.load.desc": "Load the item you're holding into your Stand.",
 
-  "ability.jjf.unload": "Unload Launcher",
-  "instruction.jjf.unload": "Guard and press V to unload ammunition",
+  "ability.jjf.unload": "Unload Ammo",
+  "instruction.jjf.unload": "Guard + V",
+  "ability.jjf.unload.desc": "Take your loaded ammo back.",
 
-  "ability.jjf.launcher": "Centrifugal Launcher",
-  "instruction.jjf.launcher": "Hold and release Use to fire loaded ammunition",
+  "ability.jjf.launcher": "Launcher",
+  "instruction.jjf.launcher": "Hold Right Click",
+  "ability.jjf.launcher.desc": "Charge up and fire your loaded ammo. Hold longer to fire more at once.",
 
   "instruction.jjf.dash": "Press C to dash"
 }

@@ -30,6 +30,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.Direction;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -47,9 +48,11 @@ import net.minecraft.world.entity.projectile.ThrownEnderpearl;
 import net.minecraft.world.entity.projectile.ThrownPotion;
 import net.minecraft.world.entity.projectile.ThrownTrident;
 import net.hydra.jojomod.event.AbilityIconInstance;
-import java.util.ArrayList;
 import java.util.List;
 import com.google.common.collect.Lists;
+import java.util.UUID;
+
+import net.minecraft.world.phys.AABB;
 
 public class PowersJumpinJackFlash extends NewPunchingStand {
 
@@ -86,11 +89,27 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
     private static final double CONE_RECOIL_MULTIPLIER = 1.15D;
     private static final double GROUND_RECOIL_MULTIPLIER = 0.55D;
 
+    private static final int SPIN_ATTACK_MIN_TICKS = 1;
+    private static final int SPIN_ATTACK_FULL_TICKS = 35;
+
+    private static final float SPIN_ATTACK_MIN_DAMAGE = 2.5F;
+    private static final float SPIN_ATTACK_MAX_DAMAGE = 5.0F;
+
+    private static final double SPIN_ATTACK_MIN_KNOCKBACK = 0.70D;
+    private static final double SPIN_ATTACK_MAX_KNOCKBACK = 3.25D;
+    private static final double SPIN_ATTACK_ZERO_G_MULTIPLIER = 1.80D;
+
     public static final byte POWER_SPIT =
             PowerIndex.POWER_2;
 
+    public static final byte POWER_RELEASE_SPREAD = 79;
+    public static final byte POWER_SPIN_RELEASE = 80;
+
     private static final int SPIT_COOLDOWN_TICKS = 80;
     private static final float SPIT_SPEED = 1.6F;
+
+    private boolean jjf$spinAttackHeld = false;
+    private int jjf$spinAttackTicks = 0;
 
     private static final ResourceLocation NORMAL_GRAVITY_ICON =
             ResourceLocation.fromNamespaceAndPath(
@@ -127,6 +146,18 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
             ResourceLocation.fromNamespaceAndPath(
                     "jjf",
                     "textures/gui/icons/jjf/spit.png"
+            );
+
+    private static final ResourceLocation PUNCH_ICON =
+            ResourceLocation.fromNamespaceAndPath(
+                    "jjf",
+                    "textures/gui/icons/jjf/punch.png"
+            );
+
+    private static final ResourceLocation GUARD_ICON =
+            ResourceLocation.fromNamespaceAndPath(
+                    "jjf",
+                    "textures/gui/icons/jjf/guard.png"
             );
 
     private boolean jjf$skill4WasDown = false;
@@ -174,73 +205,23 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
 
     @Override
     public void punchImpact(Entity entity) {
-        LivingEntity target =
-                entity instanceof LivingEntity living
-                        ? living
-                        : null;
+    }
 
-        boolean spreadTarget =
-                target instanceof ZeroGravityAccess access
-                        && access.jjf$getZeroGravityState()
-                        .getSource()
-                        == ZeroGravitySource.SPREAD;
-
-        boolean inRange =
-                entity != null
-                        && entity.distanceTo(getSelf())
-                        <= getReach() + 1.0F;
-
-        boolean heavy =
-                getActivePowerPhase()
-                        >= getActivePowerPhaseMax();
-
-        float healthBefore =
-                target != null
-                        ? target.getHealth()
-                        : 0.0F;
-
-        float absorptionBefore =
-                target != null
-                        ? target.getAbsorptionAmount()
-                        : 0.0F;
-
-        int hurtTimeBefore =
-                target != null
-                        ? target.hurtTime
-                        : 0;
-
-        super.punchImpact(entity);
-
-        if (!spreadTarget
-                || !inRange
-                || target == null) {
-            return;
-        }
-
-        boolean hitSucceeded =
-                target.getHealth() < healthBefore
-                        || target.getAbsorptionAmount()
-                        < absorptionBefore
-                        || target.hurtTime
-                        > hurtTimeBefore;
-
-        if (!hitSucceeded) {
-            return;
-        }
-
-        ZeroGravitySystem.applyJJFPunchImpulse(
-                getSelf(),
-                target,
-                heavy
-        );
+    @Override
+    public void standPunch() {
     }
 
     @Override
     public boolean interceptAttack() {
-        if (shouldUseZeroGravityBlockPush()) return false;
-        if (shouldUseZeroGravityItemSwing()) return false;
+        if (shouldUseZeroGravityBlockPush()) {
+            return false;
+        }
 
-        return super.interceptAttack();
+        if (shouldUseZeroGravityItemSwing()) {
+            return false;
+        }
+
+        return true;
     }
 
     @Override
@@ -323,10 +304,90 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
 
     @Override
     public boolean setPowerAttack() {
-        if (shouldUseZeroGravityBlockPush()) return false;
-        if (shouldUseZeroGravityItemSwing()) return false;
+        if (shouldUseZeroGravityBlockPush()) {
+            return false;
+        }
 
-        return super.setPowerAttack();
+        if (shouldUseZeroGravityItemSwing()) {
+            return false;
+        }
+
+        beginSpinAttack();
+        return true;
+    }
+
+    @Override
+    public void updateAttack() {
+        beginSpinAttack();
+    }
+
+    private void beginSpinAttack() {
+        if (jjf$spinAttackHeld) {
+            return;
+        }
+
+        jjf$spinAttackHeld = true;
+        jjf$spinAttackTicks = 0;
+        this.attackTimeDuring = 0;
+        this.setAttackTime(0);
+        this.setAttackTimeMax(SPIN_ATTACK_FULL_TICKS);
+        this.setActivePower(PowerIndex.BARRAGE);
+        this.setActivePowerPhase(this.getActivePowerPhaseMax());
+        this.poseStand(net.hydra.jojomod.event.index.OffsetIndex.ATTACK);
+        animateStand(StandEntity.BARRAGE_CHARGE);
+    }
+
+    @Override
+    public void tickPower() {
+        super.tickPower();
+
+        if (!jjf$spinAttackHeld) {
+            return;
+        }
+
+        if (!(this.getSelf() instanceof Player)) {
+            return;
+        }
+
+        if (!this.getSelf().level().isClientSide()) {
+            return;
+        }
+
+        if (!isPacketPlayer()) {
+            return;
+        }
+
+        Minecraft minecraft = Minecraft.getInstance();
+
+        if (minecraft.player == null
+                || minecraft.player.getId() != this.getSelf().getId()) {
+            return;
+        }
+
+        if (!minecraft.options.keyAttack.isDown()) {
+            releaseJJFSpinAttackClient();
+        }
+    }
+
+    @Override
+    public float inputSpeedModifiers(float basis) {
+        float modified = super.inputSpeedModifiers(basis);
+
+        if (!jjf$spinAttackHeld) {
+            return modified;
+        }
+
+        return Math.min(modified, basis * 0.30F);
+    }
+
+    @Override
+    public boolean cancelSprintJump() {
+        return jjf$spinAttackHeld || super.cancelSprintJump();
+    }
+
+    @Override
+    public boolean cancelSprint() {
+        return jjf$spinAttackHeld || super.cancelSprint();
     }
 
     @Override
@@ -334,6 +395,14 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
         switch (context) {
             case SKILL_1_NORMAL -> {
                 if (onCooldown(PowerIndex.SKILL_1)) {
+                    return;
+                }
+
+
+                if (isHoldingSneak()) {
+                    tryPowerPacket(
+                            POWER_RELEASE_SPREAD
+                    );
                     return;
                 }
 
@@ -551,6 +620,17 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
                     .level()
                     .isClientSide()) {
                 toggleSelfZeroGravity();
+            }
+
+            return true;
+        }
+
+        if (move == POWER_RELEASE_SPREAD) {
+            if (!this.getSelf()
+                    .level()
+                    .isClientSide()) {
+
+                releaseOwnSpread();
             }
 
             return true;
@@ -1146,7 +1226,7 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
             return 32;
         }
 
-        return 64;
+        return MAX_LOADED_AMMO;
     }
 
     private float getProjectileSpeed(ItemStack stack) {
@@ -1178,7 +1258,7 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
             return 2.8F;
         }
 
-        return 3.0F;
+        return PROJECTILE_SPEED;
     }
 
     private void fireBurst(
@@ -1926,6 +2006,415 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
         }
     }
 
+    @Override
+    public boolean setPowerBarrageCharge() {
+        beginSpinAttack();
+        return true;
+    }
+
+    @Override
+    public void setPowerBarrage() {
+        beginSpinAttack();
+    }
+
+    @Override
+    public void updateBarrage() {
+        if (!jjf$spinAttackHeld) {
+            return;
+        }
+
+        jjf$spinAttackTicks =
+                Mth.clamp(
+                        this.attackTimeDuring,
+                        0,
+                        SPIN_ATTACK_FULL_TICKS
+                );
+
+        if (this.attackTimeDuring > SPIN_ATTACK_FULL_TICKS) {
+            this.attackTimeDuring = SPIN_ATTACK_FULL_TICKS;
+        }
+
+        this.setAttackTime(
+                Math.max(
+                        0,
+                        SPIN_ATTACK_FULL_TICKS
+                                - jjf$spinAttackTicks
+                )
+        );
+
+        if (!(this.getSelf() instanceof Player)
+                && jjf$spinAttackTicks >= SPIN_ATTACK_FULL_TICKS) {
+            int chargeTicks = jjf$spinAttackTicks;
+            performSpinAttack(chargeTicks);
+            finishSpinAttackState();
+        }
+    }
+
+    @Override
+    public void barrageImpact(
+            Entity entity,
+            int hitNumber
+    ) {
+    }
+
+    @Override
+    public int getBarrageLength() {
+        return SPIN_ATTACK_FULL_TICKS;
+    }
+
+    private double getSpinRawCharge(int chargeTicks) {
+        return Mth.clamp(
+                chargeTicks
+                        / (double) SPIN_ATTACK_FULL_TICKS,
+                0.0D,
+                1.0D
+        );
+    }
+
+    private double getSpinForceCharge(int chargeTicks) {
+        double rawCharge =
+                getSpinRawCharge(chargeTicks);
+
+        return rawCharge * rawCharge;
+    }
+
+    private void releaseJJFSpinAttackClient() {
+        if (!jjf$spinAttackHeld) {
+            return;
+        }
+
+        int chargeTicks =
+                Mth.clamp(
+                        Math.max(
+                                SPIN_ATTACK_MIN_TICKS,
+                                jjf$spinAttackTicks
+                        ),
+                        SPIN_ATTACK_MIN_TICKS,
+                        SPIN_ATTACK_FULL_TICKS
+                );
+
+        tryIntPowerPacket(
+                POWER_SPIN_RELEASE,
+                chargeTicks
+        );
+
+        finishSpinAttackState();
+    }
+
+    @Override
+    public boolean tryIntPower(
+            int move,
+            boolean forced,
+            int chargeTime
+    ) {
+        if (move == POWER_SPIN_RELEASE) {
+            if (!this.getSelf().level().isClientSide()) {
+                int serverCharge =
+                        Mth.clamp(
+                                Math.max(
+                                        SPIN_ATTACK_MIN_TICKS,
+                                        jjf$spinAttackTicks
+                                ),
+                                SPIN_ATTACK_MIN_TICKS,
+                                SPIN_ATTACK_FULL_TICKS
+                        );
+
+                int requestedCharge =
+                        Mth.clamp(
+                                chargeTime,
+                                SPIN_ATTACK_MIN_TICKS,
+                                SPIN_ATTACK_FULL_TICKS
+                        );
+
+                int allowedCharge =
+                        Mth.clamp(
+                                serverCharge + 2,
+                                SPIN_ATTACK_MIN_TICKS,
+                                SPIN_ATTACK_FULL_TICKS
+                        );
+
+                int finalCharge =
+                        Math.min(
+                                requestedCharge,
+                                allowedCharge
+                        );
+
+                boolean validState =
+                        jjf$spinAttackHeld
+                                || getActivePower() == PowerIndex.BARRAGE
+                                || getActivePower() == PowerIndex.BARRAGE_CHARGE;
+
+                if (validState) {
+                    performSpinAttack(finalCharge);
+                }
+
+                finishSpinAttackState();
+            }
+
+            return true;
+        }
+
+        return super.tryIntPower(
+                move,
+                forced,
+                chargeTime
+        );
+    }
+
+    private void finishSpinAttackState() {
+        jjf$spinAttackHeld = false;
+        jjf$spinAttackTicks = 0;
+        animateStand(StandEntity.BARRAGE_FINISHER);
+        this.attackTimeDuring = -10;
+        this.setAttackTimeMax(10);
+    }
+
+    private void performSpinAttack(
+            int chargeTicks
+    ) {
+        Entity target =
+                getTargetEntity(
+                        this.getSelf(),
+                        -1,
+                        getPunchAngle()
+                );
+
+        if (target == null
+                || target.distanceTo(this.getSelf()) > getReach() + 1.0F) {
+            performSpinSurfaceLaunch(chargeTicks);
+            return;
+        }
+
+        double rawCharge =
+                getSpinRawCharge(chargeTicks);
+
+        double forceCharge =
+                getSpinForceCharge(chargeTicks);
+
+        float damage =
+                (float) (
+                        SPIN_ATTACK_MIN_DAMAGE
+                                + (
+                                SPIN_ATTACK_MAX_DAMAGE
+                                        - SPIN_ATTACK_MIN_DAMAGE
+                        ) * rawCharge
+                );
+
+        boolean hit =
+                StandDamageEntityAttack(
+                        target,
+                        damage,
+                        0.0F,
+                        this.getSelf()
+                );
+
+        if (!hit) {
+            return;
+        }
+
+        double knockback =
+                SPIN_ATTACK_MIN_KNOCKBACK
+                        + (
+                        SPIN_ATTACK_MAX_KNOCKBACK
+                                - SPIN_ATTACK_MIN_KNOCKBACK
+                ) * forceCharge;
+
+        if (target instanceof LivingEntity living
+                && living instanceof ZeroGravityAccess access
+                && access.jjf$getZeroGravityState().isZeroGravity()) {
+            knockback *= SPIN_ATTACK_ZERO_G_MULTIPLIER;
+        }
+
+        Vec3 direction =
+                this.getSelf()
+                        .getLookAngle();
+
+        if (direction.lengthSqr() < 0.0001D) {
+            direction =
+                    target.position()
+                            .subtract(
+                                    this.getSelf().position()
+                            );
+        }
+
+        if (direction.lengthSqr() < 0.0001D) {
+            return;
+        }
+
+        direction = direction.normalize();
+
+        double vertical =
+                direction.y * knockback
+                        + 0.16D
+                        + 0.44D * forceCharge;
+
+        target.setDeltaMovement(
+                direction.x * knockback,
+                Math.max(0.18D, vertical),
+                direction.z * knockback
+        );
+
+        target.hasImpulse = true;
+        target.hurtMarked = true;
+
+        if (target instanceof LivingEntity living) {
+            living.fallDistance = 0.0F;
+        }
+
+        applySpinRecoil(
+                direction,
+                forceCharge
+        );
+    }
+
+    private void performSpinSurfaceLaunch(
+            int chargeTicks
+    ) {
+        if (!(this.getSelf() instanceof Player player)) {
+            return;
+        }
+
+        HitResult hit =
+                player.pick(
+                        getReach() + 1.25D,
+                        0.0F,
+                        false
+                );
+
+        if (hit.getType() != HitResult.Type.BLOCK) {
+            return;
+        }
+
+        BlockHitResult blockHit =
+                (BlockHitResult) hit;
+
+        Direction face =
+                blockHit.getDirection();
+
+        Vec3 normal =
+                Vec3.atLowerCornerOf(
+                        face.getNormal()
+                );
+
+        double forceCharge =
+                getSpinForceCharge(chargeTicks);
+
+        double strength =
+                0.38D
+                        + 1.27D * forceCharge;
+
+        if (player instanceof ZeroGravityAccess access
+                && access.jjf$getZeroGravityState().isZeroGravity()) {
+            strength *= 1.30D;
+        }
+
+        Vec3 current =
+                player.getDeltaMovement();
+
+        Vec3 launch =
+                normal.scale(strength);
+
+        player.setDeltaMovement(
+                current.x * 0.25D + launch.x,
+                current.y * 0.25D + launch.y,
+                current.z * 0.25D + launch.z
+        );
+
+        player.hasImpulse = true;
+        player.hurtMarked = true;
+        player.fallDistance = 0.0F;
+    }
+
+    private void applySpinRecoil(
+            Vec3 attackDirection,
+            double forceCharge
+    ) {
+        if (!(this.getSelf() instanceof ZeroGravityAccess access)) {
+            return;
+        }
+
+        ZeroGravityState state =
+                access.jjf$getZeroGravityState();
+
+        if (!state.isZeroGravity()) {
+            return;
+        }
+
+        if (attackDirection.lengthSqr() < 0.0001D) {
+            return;
+        }
+
+        double strength =
+                0.08D
+                        + 0.60D * forceCharge;
+
+        Vec3 recoil =
+                attackDirection
+                        .normalize()
+                        .scale(-strength);
+
+        Vec3 current =
+                this.getSelf()
+                        .getDeltaMovement();
+
+        this.getSelf()
+                .setDeltaMovement(
+                        current.add(recoil)
+                );
+
+        this.getSelf().hasImpulse = true;
+        this.getSelf().hurtMarked = true;
+        this.getSelf().fallDistance = 0.0F;
+    }
+
+    private void releaseOwnSpread() {
+        if (this.getSelf().level().isClientSide()) {
+            return;
+        }
+
+        UUID ownerUUID =
+                this.getSelf().getUUID();
+
+        AABB area =
+                this.getSelf()
+                        .getBoundingBox()
+                        .inflate(64.0D);
+
+        List<LivingEntity> entities =
+                this.getSelf()
+                        .level()
+                        .getEntitiesOfClass(
+                                LivingEntity.class,
+                                area
+                        );
+
+        for (LivingEntity entity : entities) {
+            if (!(entity instanceof ZeroGravityAccess access)) {
+                continue;
+            }
+
+            ZeroGravityState state =
+                    access.jjf$getZeroGravityState();
+
+            if (state.getSource() != ZeroGravitySource.SPREAD) {
+                continue;
+            }
+
+            UUID spreadOwner =
+                    state.getOwnerUUID();
+
+            if (spreadOwner == null
+                    || !spreadOwner.equals(ownerUUID)) {
+                continue;
+            }
+
+            state.clearZeroGravity();
+            state.setRestorationTicks(20);
+            entity.setNoGravity(false);
+            entity.fallDistance = 0.0F;
+        }
+    }
+
     private void toggleSelfZeroGravity() {
         if (!(this.getSelf()
                 instanceof ZeroGravityAccess access)) {
@@ -2140,9 +2629,9 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
                 leftPos + 20,
                 topPos + 80,
                 0,
-                "ability.roundabout.punch",
-                "instruction.roundabout.press_attack",
-                StandIcons.STAR_PLATINUM_PUNCH,
+                "ability.jjf.punch",
+                "instruction.jjf.punch",
+                PUNCH_ICON,
                 0,
                 level,
                 bypass
@@ -2154,23 +2643,9 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
                 leftPos + 20,
                 topPos + 99,
                 0,
-                "ability.roundabout.guard",
-                "instruction.roundabout.hold_block",
-                StandIcons.STAR_PLATINUM_GUARD,
-                0,
-                level,
-                bypass
-        ));
-
-        icons.add(drawSingleGUIIcon(
-                context,
-                18,
-                leftPos + 20,
-                topPos + 118,
-                0,
-                "ability.roundabout.barrage",
-                "instruction.roundabout.barrage",
-                StandIcons.STAR_PLATINUM_BARRAGE,
+                "ability.jjf.guard",
+                "instruction.jjf.guard",
+                GUARD_ICON,
                 0,
                 level,
                 bypass
@@ -2488,6 +2963,7 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
                 0xFF808080
         );
     }
+
 
     @Override
     public boolean isWip() {
