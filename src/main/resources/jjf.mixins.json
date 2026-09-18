@@ -9,10 +9,10 @@
     "SpreadKnockbackMixin",
     "CrossbowItemMixin",
     "BowItemMixin",
-    "PlayerMixin",
-    "ScreenMixin"
+    "PlayerMixin"
   ],
   "client": [
+    "ScreenMixin",
     "LocalPlayerMixin",
     "KeyboardInputMixin",
     "PlayerModelMixin",

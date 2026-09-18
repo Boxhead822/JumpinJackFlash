@@ -3,65 +3,37 @@ package com.example.jjf.zero_gravity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.event.entity.living.LivingEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
 
 import java.util.List;
 import java.util.UUID;
 
-@Mod.EventBusSubscriber(
-        modid = "jjf",
-        bus = Mod.EventBusSubscriber.Bus.FORGE
-)
 public final class SpreadContactSystem {
 
-    private static final int SPREAD_ARM_TICKS = 4;
+    private static final int
+            SPREAD_ARM_TICKS = 4;
 
-    private static final int SPREAD_DURATION_TICKS = 20 * 30;
+    private static final int
+            SPREAD_DURATION_TICKS =
+            20 * 30;
 
-    private static final int RESTORATION_TICKS = 20;
+    private static final int
+            RESTORATION_TICKS = 20;
 
-    private static final double CONTACT_DISTANCE = 0.40D;
-    private static final double CONTACT_PUSH = 0.045D;
+    private static final double
+            CONTACT_DISTANCE = 0.40D;
+
+    private static final double
+            CONTACT_PUSH = 0.045D;
+
     private SpreadContactSystem() {
-    }
-
-    @SubscribeEvent
-    public static void onLivingTick(
-            LivingEvent.LivingTickEvent event
-    ) {
-        LivingEntity source =
-                event.getEntity();
-
-        if (source.level().isClientSide()) {
-            return;
-        }
-
-        if (!(source
-                instanceof ZeroGravityAccess access)) {
-            return;
-        }
-
-        ZeroGravityState state =
-                access.jjf$getZeroGravityState();
-
-        if (state.getSource()
-                != ZeroGravitySource.SPREAD) {
-            return;
-        }
-
-        tick(
-                source,
-                state
-        );
     }
 
     public static void tick(
             LivingEntity source,
             ZeroGravityState sourceState
     ) {
-        if (source.level().isClientSide()) {
+        if (source.level()
+                .isClientSide()) {
             return;
         }
 
@@ -79,8 +51,12 @@ public final class SpreadContactSystem {
                     RESTORATION_TICKS
             );
 
-            source.setNoGravity(false);
-            source.fallDistance = 0.0F;
+            source.setNoGravity(
+                    false
+            );
+
+            source.fallDistance =
+                    0.0F;
 
             return;
         }
@@ -102,7 +78,8 @@ public final class SpreadContactSystem {
                                 LivingEntity.class,
                                 contactBox,
                                 target ->
-                                        target != source
+                                        target
+                                                != source
                                                 && target.isAlive()
                                                 && !target.isSpectator()
                         );
@@ -110,16 +87,27 @@ public final class SpreadContactSystem {
         UUID ownerUUID =
                 sourceState.getOwnerUUID();
 
-        for (LivingEntity target : targets) {
+        for (LivingEntity target
+                : targets) {
+
             if (!(target
                     instanceof ZeroGravityAccess access)) {
+                continue;
+            }
+
+            if (ownerUUID != null
+                    && target.getUUID()
+                    .equals(
+                            ownerUUID
+                    )) {
                 continue;
             }
 
             ZeroGravityState targetState =
                     access.jjf$getZeroGravityState();
 
-            if (targetState.isSafeUserZeroGravity()) {
+            if (targetState
+                    .isSafeUserZeroGravity()) {
                 continue;
             }
 
@@ -147,11 +135,9 @@ public final class SpreadContactSystem {
                 ZeroGravitySource.SPREAD
         );
 
-        if (ownerUUID != null) {
-            targetState.setOwnerUUID(
-                    ownerUUID
-            );
-        }
+        targetState.setOwnerUUID(
+                ownerUUID
+        );
 
         targetState.resetZeroGravityTicks();
 

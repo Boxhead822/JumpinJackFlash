@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.example.jjf.zero_gravity.ZeroGravitySystem;
+import com.example.jjf.zero_gravity.SpreadContactSystem;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.InteractionHand;
@@ -29,6 +30,13 @@ public abstract class LivingEntityMixin implements ZeroGravityAccess {
 
         ZeroGravitySystem.tickState(entity);
         ZeroGravitySystem.tickZeroGravity(entity);
+
+        if (entity instanceof ZeroGravityAccess access) {
+            SpreadContactSystem.tick(
+                    entity,
+                    access.jjf$getZeroGravityState()
+            );
+        }
     }
 
     @Override

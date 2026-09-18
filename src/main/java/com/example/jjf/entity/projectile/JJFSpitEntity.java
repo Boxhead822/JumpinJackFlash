@@ -34,7 +34,7 @@ public class JJFSpitEntity extends ThrowableProjectile {
             LivingEntity owner
     ) {
         super(
-                ModEntities.JJF_SPIT.get(),
+                ModEntities.JJF_SPIT,
                 owner,
                 level
         );

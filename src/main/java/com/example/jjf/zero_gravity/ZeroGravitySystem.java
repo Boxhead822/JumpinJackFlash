@@ -624,7 +624,7 @@ public class ZeroGravitySystem {
             player.level().playSound(
                     null,
                     player.blockPosition(),
-                    ModSounds.SUCTION_LAUNCH.get(),
+                    ModSounds.SUCTION_LAUNCH,
                     SoundSource.PLAYERS,
                     1.0F,
                     1.0F

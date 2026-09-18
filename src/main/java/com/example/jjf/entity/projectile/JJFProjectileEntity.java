@@ -100,7 +100,7 @@ public class JJFProjectileEntity extends ThrowableItemProjectile {
             Level level,
             LivingEntity owner
     ) {
-        super(ModEntities.JJF_PROJECTILE.get(), owner, level);
+        super(ModEntities.JJF_PROJECTILE, owner, level);
         setNoGravity(true);
     }
 
@@ -1817,7 +1817,7 @@ public class JJFProjectileEntity extends ThrowableItemProjectile {
 
         JJFGunpowderCloudEntity cloud =
                 new JJFGunpowderCloudEntity(
-                        ModEntities.JJF_GUNPOWDER_CLOUD.get(),
+                        ModEntities.JJF_GUNPOWDER_CLOUD,
                         level()
                 );
 

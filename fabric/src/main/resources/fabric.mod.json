@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "jjf",
+  "version": "${version}",
+  "name": "${mod_name}",
+  "description": "${mod_description}",
+  "authors": [
+    "${mod_authors}"
+  ],
+  "contact": {
+    "sources": "https://github.com/Boxhead822/JumpinJackFlash"
+  },
+  "license": "${mod_license}",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.example.jjf.fabric.JJFModFabric"
+    ],
+    "client": [
+      "com.example.jjf.fabric.JJFModFabricClient"
+    ]
+  },
+  "mixins": [
+    "jjf.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${fabric_loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}",
+    "java": ">=17",
+    "roundabout": "${roundabout_version}"
+  }
+}

@@ -1,0 +1,78 @@
+plugins {
+    id 'idea'
+    id 'maven-publish'
+    id 'net.minecraftforge.gradle'
+    id 'org.spongepowered.mixin'
+}
+
+base {
+    archivesName = "${mod_id}-forge-${minecraft_version}"
+}
+
+mixin {
+    add sourceSets.main, "${mod_id}.refmap.json"
+    config "${mod_id}.mixins.json"
+}
+
+minecraft {
+    mappings channel: 'official', version: minecraft_version
+    copyIdeResources = true
+
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+
+            mods {
+                jjf {
+                    source sourceSets.main
+                    source project(':common').sourceSets.main
+                }
+            }
+        }
+
+        server {
+            workingDirectory project.file('run')
+            args '--nogui'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+
+            mods {
+                jjf {
+                    source sourceSets.main
+                    source project(':common').sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    compileOnly project(':common')
+
+    implementation fg.deobf(
+            "curse.maven:roundabout-the-jojo-mod-1115305:${roundabout_forge_file}"
+    )
+
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    source(project(':common').sourceSets.main.allSource)
+}
+
+tasks.withType(Javadoc).configureEach {
+    source(project(':common').sourceSets.main.allJava)
+}
+
+tasks.named('sourcesJar', Jar).configure {
+    from(project(':common').sourceSets.main.allSource)
+}
+
+processResources {
+    from project(':common').sourceSets.main.resources
+}
+
+jar.finalizedBy('reobfJar')

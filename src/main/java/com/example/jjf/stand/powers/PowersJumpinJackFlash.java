@@ -184,7 +184,7 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
 
     @Override
     public StandEntity getNewStandEntity() {
-        return ModEntities.JUMPIN_JACK_FLASH.get().create(
+        return ModEntities.JUMPIN_JACK_FLASH.create(
                 this.getSelf().level()
         );
     }
@@ -196,7 +196,7 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
         this.getSelf().level().playSound(
                 null,
                 this.getSelf().blockPosition(),
-                ModSounds.JUMPIN_JACK_FLASH_SUMMON.get(),
+                ModSounds.JUMPIN_JACK_FLASH_SUMMON,
                 SoundSource.PLAYERS,
                 1.0F,
                 1.0F
@@ -1162,7 +1162,7 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
         player.level().playSound(
                 null,
                 player.blockPosition(),
-                ModSounds.LAUNCHER_SHOOT.get(),
+                ModSounds.LAUNCHER_SHOOT,
                 SoundSource.PLAYERS,
                 soundVolume,
                 soundPitch
@@ -1348,7 +1348,7 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
         player.level().playSound(
                 null,
                 player.blockPosition(),
-                ModSounds.LAUNCHER_BURST.get(),
+                ModSounds.LAUNCHER_BURST,
                 SoundSource.PLAYERS,
                 soundVolume,
                 soundPitch
@@ -1444,7 +1444,7 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
         player.level().playSound(
                 null,
                 player.blockPosition(),
-                ModSounds.LAUNCHER_BURST.get(),
+                ModSounds.LAUNCHER_BURST,
                 SoundSource.PLAYERS,
                 soundVolume,
                 soundPitch
