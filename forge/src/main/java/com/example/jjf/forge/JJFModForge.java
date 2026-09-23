@@ -29,7 +29,7 @@ public final class JJFModForge {
             ROUNDABOUT_WIP_TAB =
             ResourceKey.create(
                     Registries.CREATIVE_MODE_TAB,
-                    ResourceLocation.fromNamespaceAndPath(
+                    new ResourceLocation(
                             "roundabout",
                             "jojo_wip_features"
                     )

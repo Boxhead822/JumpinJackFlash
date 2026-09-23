@@ -13,6 +13,7 @@
   ],
   "client": [
     "ScreenMixin",
+    "AbstractContainerScreenAccessor",
     "LocalPlayerMixin",
     "KeyboardInputMixin",
     "PlayerModelMixin",

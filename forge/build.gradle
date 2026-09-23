@@ -9,6 +9,10 @@ base {
     archivesName = "${mod_id}-forge-${minecraft_version}"
 }
 
+java {
+    withSourcesJar()
+}
+
 mixin {
     add sourceSets.main, "${mod_id}.refmap.json"
     config "${mod_id}.mixins.json"

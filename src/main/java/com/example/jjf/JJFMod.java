@@ -19,7 +19,7 @@ public final class JJFMod {
     public static ResourceLocation id(
             String path
     ) {
-        return ResourceLocation.fromNamespaceAndPath(
+        return new ResourceLocation(
                 MODID,
                 path
         );

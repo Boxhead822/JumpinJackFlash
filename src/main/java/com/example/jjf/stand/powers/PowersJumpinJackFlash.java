@@ -112,50 +112,50 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
     private int jjf$spinAttackTicks = 0;
 
     private static final ResourceLocation NORMAL_GRAVITY_ICON =
-            ResourceLocation.fromNamespaceAndPath(
+            new ResourceLocation(
                     "roundabout",
                     "textures/mob_effect/gravity_flip.png"
             );
 
     private static final ResourceLocation ZERO_GRAVITY_ON =
-            ResourceLocation.fromNamespaceAndPath(
+            new ResourceLocation(
                     "jjf",
                     "textures/gui/icons/jjf/zero_gravity_on.png"
             );
 
 
     private static final ResourceLocation LOADING_ICON =
-            ResourceLocation.fromNamespaceAndPath(
+            new ResourceLocation(
                     "jjf",
                     "textures/gui/icons/jjf/load.png"
             );
 
     private static final ResourceLocation SHOOTING_ICON =
-            ResourceLocation.fromNamespaceAndPath(
+            new ResourceLocation(
                     "jjf",
                     "textures/gui/icons/jjf/shoot.png"
             );
 
     private static final ResourceLocation UNLOADING_ICON =
-            ResourceLocation.fromNamespaceAndPath(
+            new ResourceLocation(
                     "jjf",
                     "textures/gui/icons/jjf/unload.png"
             );
 
     private static final ResourceLocation SPIT_ICON =
-            ResourceLocation.fromNamespaceAndPath(
+            new ResourceLocation(
                     "jjf",
                     "textures/gui/icons/jjf/spit.png"
             );
 
     private static final ResourceLocation PUNCH_ICON =
-            ResourceLocation.fromNamespaceAndPath(
+            new ResourceLocation(
                     "jjf",
                     "textures/gui/icons/jjf/punch.png"
             );
 
     private static final ResourceLocation GUARD_ICON =
-            ResourceLocation.fromNamespaceAndPath(
+            new ResourceLocation(
                     "jjf",
                     "textures/gui/icons/jjf/guard.png"
             );

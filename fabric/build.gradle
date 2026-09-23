@@ -9,6 +9,10 @@ base {
     archivesName = "${mod_id}-fabric-${minecraft_version}"
 }
 
+java {
+    withSourcesJar()
+}
+
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
     mappings loom.officialMojangMappings()
