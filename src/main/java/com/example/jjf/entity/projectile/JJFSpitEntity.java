@@ -19,6 +19,7 @@ public class JJFSpitEntity extends ThrowableProjectile {
 
     private static final double MAX_RANGE = 20.0D;
     private static final int MAX_LIFE_TICKS = 40;
+    private static final float STARTING_FIELD_RADIUS = 0.75F;
 
     private Vec3 startPos;
 
@@ -75,8 +76,7 @@ public class JJFSpitEntity extends ThrowableProjectile {
         }
 
         if (startPos != null
-                && position().distanceTo(startPos)
-                >= MAX_RANGE) {
+                && position().distanceTo(startPos) >= MAX_RANGE) {
             discard();
         }
     }
@@ -92,6 +92,12 @@ public class JJFSpitEntity extends ThrowableProjectile {
                 getOwner();
 
         if (!(target instanceof LivingEntity living)) {
+            discard();
+            return;
+        }
+
+        if (owner != null
+                && living.getUUID().equals(owner.getUUID())) {
             discard();
             return;
         }
@@ -128,6 +134,14 @@ public class JJFSpitEntity extends ThrowableProjectile {
 
         state.resetZeroGravityTicks();
 
+        state.setRadius(
+                STARTING_FIELD_RADIUS
+        );
+
+        state.setSpreadEmitter(
+                true
+        );
+
         living.setNoGravity(true);
         living.fallDistance = 0.0F;
 
@@ -149,6 +163,7 @@ public class JJFSpitEntity extends ThrowableProjectile {
             );
 
             living.hasImpulse = true;
+            living.hurtMarked = true;
         }
 
         spawnImpactParticles(

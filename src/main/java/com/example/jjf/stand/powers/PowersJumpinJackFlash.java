@@ -51,7 +51,8 @@ import net.hydra.jojomod.event.AbilityIconInstance;
 import java.util.List;
 import com.google.common.collect.Lists;
 import java.util.UUID;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.AABB;
 
 public class PowersJumpinJackFlash extends NewPunchingStand {
@@ -519,7 +520,35 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
             return;
         }
 
-        if (isLauncherRightClickBlocked(player)) {
+        Minecraft minecraft =
+                Minecraft.getInstance();
+
+        if (minecraft.hitResult != null
+                && minecraft.hitResult.getType()
+                == HitResult.Type.BLOCK) {
+
+            jjf$useWasDown = false;
+            jjf$useHoldTicks = 0;
+            return;
+        }
+
+        if (player.isUsingItem()) {
+            jjf$useWasDown = false;
+            jjf$useHoldTicks = 0;
+            return;
+        }
+
+        ItemStack mainHand =
+                player.getMainHandItem();
+
+        ItemStack offHand =
+                player.getOffhandItem();
+
+        if ((!mainHand.isEmpty()
+                && mainHand.getUseAnimation() != UseAnim.NONE)
+                || (!offHand.isEmpty()
+                && offHand.getUseAnimation() != UseAnim.NONE)) {
+
             jjf$useWasDown = false;
             jjf$useHoldTicks = 0;
             return;
@@ -534,30 +563,6 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
         if (jjf$useHoldTicks < CONE_READY_TICKS) {
             jjf$useHoldTicks++;
         }
-    }
-
-    private boolean isLauncherRightClickBlocked(
-            Player player
-    ) {
-        if (player.isUsingItem()) {
-            return true;
-        }
-
-        ItemStack mainHand =
-                player.getMainHandItem();
-
-        ItemStack offHand =
-                player.getOffhandItem();
-
-        if (!mainHand.isEmpty()
-                && mainHand.getUseAnimation()
-                != UseAnim.NONE) {
-            return true;
-        }
-
-        return !offHand.isEmpty()
-                && offHand.getUseAnimation()
-                != UseAnim.NONE;
     }
 
     @Override

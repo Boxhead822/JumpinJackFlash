@@ -1,7 +1,8 @@
 package com.example.jjf.zero_gravity;
 
-import java.util.UUID;
 import net.minecraft.core.Direction;
+
+import java.util.UUID;
 
 public class ZeroGravityState {
 
@@ -11,23 +12,17 @@ public class ZeroGravityState {
     private float radius = 0.0F;
     private int restorationTicks = 0;
     private int swingImpulseCooldown = 0;
+    private int zeroGravityToggleCooldown = 0;
+    private int suctionLaunchSoundCooldown = 0;
+
+    private boolean suctioned = false;
+    private boolean suctionLaunchSoundEnabled = false;
+    private boolean spreadEmitter = false;
+
+    private Direction suctionSurface = null;
 
     public boolean isZeroGravity() {
         return source != ZeroGravitySource.NONE;
-    }
-
-    public int getSwingImpulseCooldown() {
-        return swingImpulseCooldown;
-    }
-
-    public void setSwingImpulseCooldown(int swingImpulseCooldown) {
-        this.swingImpulseCooldown = swingImpulseCooldown;
-    }
-
-    public void tickSwingImpulseCooldown() {
-        if (swingImpulseCooldown > 0) {
-            swingImpulseCooldown--;
-        }
     }
 
     public boolean isSpread() {
@@ -74,6 +69,14 @@ public class ZeroGravityState {
         this.radius = radius;
     }
 
+    public boolean isSpreadEmitter() {
+        return spreadEmitter;
+    }
+
+    public void setSpreadEmitter(boolean spreadEmitter) {
+        this.spreadEmitter = spreadEmitter;
+    }
+
     public int getRestorationTicks() {
         return restorationTicks;
     }
@@ -92,8 +95,19 @@ public class ZeroGravityState {
         }
     }
 
-    private boolean suctioned = false;
-    private Direction suctionSurface = null;
+    public int getSwingImpulseCooldown() {
+        return swingImpulseCooldown;
+    }
+
+    public void setSwingImpulseCooldown(int swingImpulseCooldown) {
+        this.swingImpulseCooldown = swingImpulseCooldown;
+    }
+
+    public void tickSwingImpulseCooldown() {
+        if (swingImpulseCooldown > 0) {
+            swingImpulseCooldown--;
+        }
+    }
 
     public boolean isSuctioned() {
         return suctioned;
@@ -111,17 +125,6 @@ public class ZeroGravityState {
         this.suctionSurface = suctionSurface;
     }
 
-    public void clearZeroGravity() {
-        source = ZeroGravitySource.NONE;
-        ownerUUID = null;
-        zeroGravityTicks = 0;
-        radius = 0.0F;
-        suctioned = false;
-        swingImpulseCooldown = 0;
-    }
-
-    private int zeroGravityToggleCooldown = 0;
-
     public int getZeroGravityToggleCooldown() {
         return zeroGravityToggleCooldown;
     }
@@ -135,7 +138,6 @@ public class ZeroGravityState {
             zeroGravityToggleCooldown--;
         }
     }
-    private int suctionLaunchSoundCooldown = 0;
 
     public int getSuctionLaunchSoundCooldown() {
         return suctionLaunchSoundCooldown;
@@ -151,8 +153,6 @@ public class ZeroGravityState {
         }
     }
 
-    private boolean suctionLaunchSoundEnabled = false;
-
     public boolean isSuctionLaunchSoundEnabled() {
         return suctionLaunchSoundEnabled;
     }
@@ -165,4 +165,14 @@ public class ZeroGravityState {
         suctionLaunchSoundEnabled = !suctionLaunchSoundEnabled;
     }
 
+    public void clearZeroGravity() {
+        source = ZeroGravitySource.NONE;
+        ownerUUID = null;
+        zeroGravityTicks = 0;
+        radius = 0.0F;
+        suctioned = false;
+        suctionSurface = null;
+        swingImpulseCooldown = 0;
+        spreadEmitter = false;
+    }
 }
