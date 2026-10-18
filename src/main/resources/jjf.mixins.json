@@ -9,7 +9,8 @@
     "CrossbowItemMixin",
     "BowItemMixin",
     "PlayerMixin",
-    "JJFMobStandPoolMixin"
+    "JJFMobStandPoolMixin",
+    "JJFMobAIMixin"
   ],
   "client": [
     "AirPressureHudMixin",
@@ -17,7 +18,8 @@
     "LocalPlayerMixin",
     "KeyboardInputMixin",
     "PlayerModelMixin",
-    "PlayerRendererMixin"
+    "PlayerRendererMixin",
+    "JJFSpinAnimationMixin"
   ],
   "server": [],
   "injectors": {
