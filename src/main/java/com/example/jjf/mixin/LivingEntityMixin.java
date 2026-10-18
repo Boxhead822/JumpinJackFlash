@@ -1,21 +1,19 @@
 package com.example.jjf.mixin;
 
+import com.example.jjf.zero_gravity.AirPressureSystem;
+import com.example.jjf.zero_gravity.SpreadContactSystem;
 import com.example.jjf.zero_gravity.ZeroGravityAccess;
 import com.example.jjf.zero_gravity.ZeroGravityState;
+import com.example.jjf.zero_gravity.ZeroGravitySystem;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import com.example.jjf.zero_gravity.ZeroGravitySystem;
-import com.example.jjf.zero_gravity.SpreadContactSystem;
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.nbt.CompoundTag;
-
-
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin implements ZeroGravityAccess {
@@ -24,53 +22,61 @@ public abstract class LivingEntityMixin implements ZeroGravityAccess {
     private final ZeroGravityState jjf$zeroGravityState =
             new ZeroGravityState();
 
-    @Inject(method = "tick", at = @At("TAIL"))
-    private void jjf$tickZeroGravity(CallbackInfo ci) {
-        LivingEntity entity = (LivingEntity) (Object) this;
+    @Inject(
+            method = "tick",
+            at = @At("TAIL")
+    )
+    private void jjf$tickZeroGravity(
+            CallbackInfo ci
+    ) {
+        LivingEntity entity =
+                (LivingEntity) (Object) this;
 
-        ZeroGravitySystem.tickState(entity);
-        ZeroGravitySystem.tickZeroGravity(entity);
+        ZeroGravityState state =
+                jjf$zeroGravityState;
 
-        if (entity instanceof ZeroGravityAccess access) {
-            SpreadContactSystem.tick(
-                    entity,
-                    access.jjf$getZeroGravityState()
-            );
-        }
+        ZeroGravitySystem.tickState(
+                entity
+        );
+
+        ZeroGravitySystem.tickZeroGravity(
+                entity
+        );
+
+        AirPressureSystem.tick(
+                entity,
+                state
+        );
+
+        SpreadContactSystem.tick(
+                entity,
+                state
+        );
     }
 
     @Override
     public ZeroGravityState jjf$getZeroGravityState() {
-        return this.jjf$zeroGravityState;
+        return jjf$zeroGravityState;
     }
 
-    @Inject(method = "knockback", at = @At("TAIL"))
+    @Inject(
+            method = "knockback",
+            at = @At("TAIL")
+    )
     private void jjf$zeroGravityKnockback(
             double strength,
             double x,
             double z,
             CallbackInfo ci
     ) {
-        LivingEntity entity = (LivingEntity) (Object) this;
+        LivingEntity entity =
+                (LivingEntity) (Object) this;
 
-        if (!(entity instanceof ZeroGravityAccess access)) {
-            return;
-        }
-
-        if (!access.jjf$getZeroGravityState().isZeroGravity()) {
-            return;
-        }
-
-        Vec3 motion = entity.getDeltaMovement();
-
-        entity.setDeltaMovement(
-                motion.x * 1.20D,
-                motion.y * 1.08D,
-                motion.z * 1.20D
+        ZeroGravitySystem.amplifySpreadKnockback(
+                entity
         );
-
-        entity.hasImpulse = true;
     }
+
     @Inject(
             method = "swing(Lnet/minecraft/world/InteractionHand;Z)V",
             at = @At("HEAD")
@@ -80,14 +86,18 @@ public abstract class LivingEntityMixin implements ZeroGravityAccess {
             boolean updateSelf,
             CallbackInfo ci
     ) {
-        LivingEntity entity = (LivingEntity) (Object) this;
-
         if (hand != InteractionHand.MAIN_HAND) {
             return;
         }
 
-        ZeroGravitySystem.applySwingImpulse(entity);
+        LivingEntity entity =
+                (LivingEntity) (Object) this;
+
+        ZeroGravitySystem.applySwingImpulse(
+                entity
+        );
     }
+
     @Inject(
             method = "addAdditionalSaveData",
             at = @At("TAIL")
@@ -96,20 +106,13 @@ public abstract class LivingEntityMixin implements ZeroGravityAccess {
             CompoundTag tag,
             CallbackInfo ci
     ) {
-        LivingEntity entity = (LivingEntity) (Object) this;
-
-        if (!(entity instanceof ZeroGravityAccess access)) {
-            return;
-        }
-
-        ZeroGravityState state =
-                access.jjf$getZeroGravityState();
-
         tag.putBoolean(
                 "JJFZeroGravityActive",
-                state.isZeroGravity()
+                jjf$zeroGravityState
+                        .isZeroGravity()
         );
     }
+
     @Inject(
             method = "readAdditionalSaveData",
             at = @At("TAIL")
@@ -118,26 +121,35 @@ public abstract class LivingEntityMixin implements ZeroGravityAccess {
             CompoundTag tag,
             CallbackInfo ci
     ) {
-        LivingEntity entity = (LivingEntity) (Object) this;
-
-        if (!tag.getBoolean("JJFZeroGravityActive")) {
+        if (!tag.getBoolean(
+                "JJFZeroGravityActive"
+        )) {
             return;
         }
 
-        if (!(entity instanceof ZeroGravityAccess access)) {
-            return;
-        }
+        LivingEntity entity =
+                (LivingEntity) (Object) this;
 
-        ZeroGravityState state =
-                access.jjf$getZeroGravityState();
+        jjf$zeroGravityState
+                .clearZeroGravity();
 
-        state.clearZeroGravity();
-        state.setRestorationTicks(0);
+        jjf$zeroGravityState
+                .setRestorationTicks(
+                        0
+                );
 
-        entity.setNoGravity(false);
-        entity.fallDistance = 0.0F;
-        entity.setDeltaMovement(Vec3.ZERO);
-        entity.hasImpulse = true;
+        entity.setNoGravity(
+                false
+        );
+
+        entity.fallDistance =
+                0.0F;
+
+        entity.setDeltaMovement(
+                Vec3.ZERO
+        );
+
+        entity.hasImpulse =
+                true;
     }
-
 }

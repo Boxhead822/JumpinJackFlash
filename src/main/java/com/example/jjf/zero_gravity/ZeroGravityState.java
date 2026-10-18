@@ -7,9 +7,14 @@ import java.util.UUID;
 public class ZeroGravityState {
 
     private ZeroGravitySource source = ZeroGravitySource.NONE;
-    private UUID ownerUUID = null;
+    private UUID ownerUUID;
+
     private int zeroGravityTicks = 0;
+    private int airPressureTicks = 0;
+    private int outsideOwnerRangeTicks = 0;
+
     private float radius = 0.0F;
+
     private int restorationTicks = 0;
     private int swingImpulseCooldown = 0;
     private int zeroGravityToggleCooldown = 0;
@@ -17,9 +22,8 @@ public class ZeroGravityState {
 
     private boolean suctioned = false;
     private boolean suctionLaunchSoundEnabled = false;
-    private boolean spreadEmitter = false;
 
-    private Direction suctionSurface = null;
+    private Direction suctionSurface;
 
     public boolean isZeroGravity() {
         return source != ZeroGravitySource.NONE;
@@ -39,6 +43,11 @@ public class ZeroGravityState {
 
     public void setSource(ZeroGravitySource source) {
         this.source = source;
+
+        if (source != ZeroGravitySource.SPREAD) {
+            resetAirPressureTicks();
+            resetOutsideOwnerRangeTicks();
+        }
     }
 
     public UUID getOwnerUUID() {
@@ -61,20 +70,36 @@ public class ZeroGravityState {
         zeroGravityTicks = 0;
     }
 
+    public int getAirPressureTicks() {
+        return airPressureTicks;
+    }
+
+    public void incrementAirPressureTicks() {
+        airPressureTicks++;
+    }
+
+    public void resetAirPressureTicks() {
+        airPressureTicks = 0;
+    }
+
+    public int getOutsideOwnerRangeTicks() {
+        return outsideOwnerRangeTicks;
+    }
+
+    public void incrementOutsideOwnerRangeTicks() {
+        outsideOwnerRangeTicks++;
+    }
+
+    public void resetOutsideOwnerRangeTicks() {
+        outsideOwnerRangeTicks = 0;
+    }
+
     public float getRadius() {
         return radius;
     }
 
     public void setRadius(float radius) {
         this.radius = radius;
-    }
-
-    public boolean isSpreadEmitter() {
-        return spreadEmitter;
-    }
-
-    public void setSpreadEmitter(boolean spreadEmitter) {
-        this.spreadEmitter = spreadEmitter;
     }
 
     public int getRestorationTicks() {
@@ -99,8 +124,8 @@ public class ZeroGravityState {
         return swingImpulseCooldown;
     }
 
-    public void setSwingImpulseCooldown(int swingImpulseCooldown) {
-        this.swingImpulseCooldown = swingImpulseCooldown;
+    public void setSwingImpulseCooldown(int ticks) {
+        swingImpulseCooldown = ticks;
     }
 
     public void tickSwingImpulseCooldown() {
@@ -168,11 +193,16 @@ public class ZeroGravityState {
     public void clearZeroGravity() {
         source = ZeroGravitySource.NONE;
         ownerUUID = null;
+
         zeroGravityTicks = 0;
+        airPressureTicks = 0;
+        outsideOwnerRangeTicks = 0;
+
         radius = 0.0F;
+
         suctioned = false;
         suctionSurface = null;
+
         swingImpulseCooldown = 0;
-        spreadEmitter = false;
     }
 }

@@ -19,7 +19,6 @@ public class JJFSpitEntity extends ThrowableProjectile {
 
     private static final double MAX_RANGE = 20.0D;
     private static final int MAX_LIFE_TICKS = 40;
-    private static final float STARTING_FIELD_RADIUS = 0.75F;
 
     private Vec3 startPos;
 
@@ -85,6 +84,10 @@ public class JJFSpitEntity extends ThrowableProjectile {
     protected void onHitEntity(
             EntityHitResult result
     ) {
+        if (level().isClientSide()) {
+            return;
+        }
+
         Entity target =
                 result.getEntity();
 
@@ -97,7 +100,7 @@ public class JJFSpitEntity extends ThrowableProjectile {
         }
 
         if (owner != null
-                && living.getUUID().equals(owner.getUUID())) {
+                && owner.getUUID().equals(living.getUUID())) {
             discard();
             return;
         }
@@ -133,24 +136,18 @@ public class JJFSpitEntity extends ThrowableProjectile {
         }
 
         state.resetZeroGravityTicks();
-
-        state.setRadius(
-                STARTING_FIELD_RADIUS
-        );
-
-        state.setSpreadEmitter(
-                true
-        );
+        state.resetAirPressureTicks();
+        state.setRestorationTicks(0);
 
         living.setNoGravity(true);
         living.fallDistance = 0.0F;
 
-        Vec3 spitMotion =
+        Vec3 motion =
                 getDeltaMovement();
 
-        if (spitMotion.lengthSqr() > 0.0001D) {
+        if (motion.lengthSqr() > 0.0001D) {
             Vec3 push =
-                    spitMotion.normalize()
+                    motion.normalize()
                             .scale(0.12D);
 
             living.setDeltaMovement(
@@ -177,15 +174,17 @@ public class JJFSpitEntity extends ThrowableProjectile {
     protected void onHitBlock(
             BlockHitResult result
     ) {
-        spawnMissParticles();
+        if (!level().isClientSide()) {
+            spawnMissParticles();
+        }
+
         discard();
     }
 
     private void spawnImpactParticles(
             LivingEntity target
     ) {
-        if (!(level()
-                instanceof ServerLevel server)) {
+        if (!(level() instanceof ServerLevel server)) {
             return;
         }
 
@@ -193,8 +192,7 @@ public class JJFSpitEntity extends ThrowableProjectile {
                 ParticleTypes.SPLASH,
                 target.getX(),
                 target.getY()
-                        + target.getBbHeight()
-                        * 0.5D,
+                        + target.getBbHeight() * 0.5D,
                 target.getZ(),
                 12,
                 0.25D,
@@ -205,8 +203,7 @@ public class JJFSpitEntity extends ThrowableProjectile {
     }
 
     private void spawnMissParticles() {
-        if (!(level()
-                instanceof ServerLevel server)) {
+        if (!(level() instanceof ServerLevel server)) {
             return;
         }
 
