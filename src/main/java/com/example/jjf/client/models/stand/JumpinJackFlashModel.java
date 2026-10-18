@@ -14,7 +14,7 @@ import net.minecraft.resources.ResourceLocation;
 
 public class JumpinJackFlashModel<T extends FollowingStandEntity> extends StandModel<T> {
     public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
-            ResourceLocation.fromNamespaceAndPath("jjf", "jumpin_jack_flash"), "main"
+            new ResourceLocation("jjf", "jumpin_jack_flash"), "main"
     );
 
     private final ModelPart stand2;

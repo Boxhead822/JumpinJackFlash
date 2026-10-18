@@ -6,13 +6,14 @@
   "refmap": "jjf.refmap.json",
   "mixins": [
     "LivingEntityMixin",
-    "SpreadKnockbackMixin",
     "CrossbowItemMixin",
     "BowItemMixin",
     "PlayerMixin",
-    "ScreenMixin"
+    "JJFMobStandPoolMixin"
   ],
   "client": [
+    "AirPressureHudMixin",
+    "ScreenMixin",
     "LocalPlayerMixin",
     "KeyboardInputMixin",
     "PlayerModelMixin",

@@ -34,8 +34,13 @@ public abstract class ScreenMixin {
 
         if (!jjf$showSettings(screen)) return;
 
-        int left = screen.getGuiLeft();
-        int top = screen.getGuiTop();
+        int left =
+                ((AbstractContainerScreenAccessor) (Object) screen)
+                        .jjf$getLeftPos();
+
+        int top =
+                ((AbstractContainerScreenAccessor) (Object) screen)
+                        .jjf$getTopPos();
 
         int x = left - 135;
         int ammoY = top + 125;
@@ -96,8 +101,13 @@ public abstract class ScreenMixin {
 
         if (button != 0 || !jjf$showSettings(screen)) return;
 
-        int left = screen.getGuiLeft();
-        int top = screen.getGuiTop();
+        int left =
+                ((AbstractContainerScreenAccessor) (Object) screen)
+                        .jjf$getLeftPos();
+
+        int top =
+                ((AbstractContainerScreenAccessor) (Object) screen)
+                        .jjf$getTopPos();
 
         if (jjf$isHovering(
                 left - 136,

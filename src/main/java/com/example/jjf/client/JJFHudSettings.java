@@ -1,7 +1,7 @@
 package com.example.jjf.client;
 
+import com.example.jjf.JJFMod;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.fml.loading.FMLPaths;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,10 +11,6 @@ import java.nio.file.Path;
 import java.util.Properties;
 
 public final class JJFHudSettings {
-
-    private static final Path SETTINGS_FILE =
-            FMLPaths.CONFIGDIR.get()
-                    .resolve("jjf-hud.properties");
 
     private static boolean showAmmoText = true;
     private static boolean showLauncherText = true;
@@ -47,19 +43,39 @@ public final class JJFHudSettings {
     public static Component ammoMessage() {
         return Component.literal(
                 "Ammo Text: "
-                        + (showAmmoText ? "ON" : "OFF")
+                        + (
+                        showAmmoText
+                                ? "ON"
+                                : "OFF"
+                )
         );
     }
 
     public static Component launcherMessage() {
         return Component.literal(
                 "Launcher Text: "
-                        + (showLauncherText ? "ON" : "OFF")
+                        + (
+                        showLauncherText
+                                ? "ON"
+                                : "OFF"
+                )
         );
     }
 
+    private static Path settingsFile() {
+        return JJFMod.configDirectory()
+                .resolve(
+                        "jjf-hud.properties"
+                );
+    }
+
     private static void load() {
-        if (!Files.exists(SETTINGS_FILE)) {
+        Path settingsFile =
+                settingsFile();
+
+        if (!Files.exists(
+                settingsFile
+        )) {
             return;
         }
 
@@ -68,10 +84,12 @@ public final class JJFHudSettings {
 
         try (InputStream input =
                      Files.newInputStream(
-                             SETTINGS_FILE
+                             settingsFile
                      )) {
 
-            properties.load(input);
+            properties.load(
+                    input
+            );
 
             showAmmoText =
                     Boolean.parseBoolean(
@@ -94,6 +112,9 @@ public final class JJFHudSettings {
     }
 
     private static void save() {
+        Path settingsFile =
+                settingsFile();
+
         Properties properties =
                 new Properties();
 
@@ -113,12 +134,12 @@ public final class JJFHudSettings {
 
         try {
             Files.createDirectories(
-                    SETTINGS_FILE.getParent()
+                    settingsFile.getParent()
             );
 
             try (OutputStream output =
                          Files.newOutputStream(
-                                 SETTINGS_FILE
+                                 settingsFile
                          )) {
 
                 properties.store(

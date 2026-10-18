@@ -51,7 +51,8 @@ import net.hydra.jojomod.event.AbilityIconInstance;
 import java.util.List;
 import com.google.common.collect.Lists;
 import java.util.UUID;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.AABB;
 
 public class PowersJumpinJackFlash extends NewPunchingStand {
@@ -112,50 +113,50 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
     private int jjf$spinAttackTicks = 0;
 
     private static final ResourceLocation NORMAL_GRAVITY_ICON =
-            ResourceLocation.fromNamespaceAndPath(
+            new ResourceLocation(
                     "roundabout",
                     "textures/mob_effect/gravity_flip.png"
             );
 
     private static final ResourceLocation ZERO_GRAVITY_ON =
-            ResourceLocation.fromNamespaceAndPath(
+            new ResourceLocation(
                     "jjf",
                     "textures/gui/icons/jjf/zero_gravity_on.png"
             );
 
 
     private static final ResourceLocation LOADING_ICON =
-            ResourceLocation.fromNamespaceAndPath(
+            new ResourceLocation(
                     "jjf",
                     "textures/gui/icons/jjf/load.png"
             );
 
     private static final ResourceLocation SHOOTING_ICON =
-            ResourceLocation.fromNamespaceAndPath(
+            new ResourceLocation(
                     "jjf",
                     "textures/gui/icons/jjf/shoot.png"
             );
 
     private static final ResourceLocation UNLOADING_ICON =
-            ResourceLocation.fromNamespaceAndPath(
+            new ResourceLocation(
                     "jjf",
                     "textures/gui/icons/jjf/unload.png"
             );
 
     private static final ResourceLocation SPIT_ICON =
-            ResourceLocation.fromNamespaceAndPath(
+            new ResourceLocation(
                     "jjf",
                     "textures/gui/icons/jjf/spit.png"
             );
 
     private static final ResourceLocation PUNCH_ICON =
-            ResourceLocation.fromNamespaceAndPath(
+            new ResourceLocation(
                     "jjf",
                     "textures/gui/icons/jjf/punch.png"
             );
 
     private static final ResourceLocation GUARD_ICON =
-            ResourceLocation.fromNamespaceAndPath(
+            new ResourceLocation(
                     "jjf",
                     "textures/gui/icons/jjf/guard.png"
             );
@@ -184,7 +185,7 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
 
     @Override
     public StandEntity getNewStandEntity() {
-        return ModEntities.JUMPIN_JACK_FLASH.get().create(
+        return ModEntities.JUMPIN_JACK_FLASH.create(
                 this.getSelf().level()
         );
     }
@@ -196,7 +197,7 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
         this.getSelf().level().playSound(
                 null,
                 this.getSelf().blockPosition(),
-                ModSounds.JUMPIN_JACK_FLASH_SUMMON.get(),
+                ModSounds.JUMPIN_JACK_FLASH_SUMMON,
                 SoundSource.PLAYERS,
                 1.0F,
                 1.0F
@@ -519,7 +520,35 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
             return;
         }
 
-        if (isLauncherRightClickBlocked(player)) {
+        Minecraft minecraft =
+                Minecraft.getInstance();
+
+        if (minecraft.hitResult != null
+                && minecraft.hitResult.getType()
+                == HitResult.Type.BLOCK) {
+
+            jjf$useWasDown = false;
+            jjf$useHoldTicks = 0;
+            return;
+        }
+
+        if (player.isUsingItem()) {
+            jjf$useWasDown = false;
+            jjf$useHoldTicks = 0;
+            return;
+        }
+
+        ItemStack mainHand =
+                player.getMainHandItem();
+
+        ItemStack offHand =
+                player.getOffhandItem();
+
+        if ((!mainHand.isEmpty()
+                && mainHand.getUseAnimation() != UseAnim.NONE)
+                || (!offHand.isEmpty()
+                && offHand.getUseAnimation() != UseAnim.NONE)) {
+
             jjf$useWasDown = false;
             jjf$useHoldTicks = 0;
             return;
@@ -534,30 +563,6 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
         if (jjf$useHoldTicks < CONE_READY_TICKS) {
             jjf$useHoldTicks++;
         }
-    }
-
-    private boolean isLauncherRightClickBlocked(
-            Player player
-    ) {
-        if (player.isUsingItem()) {
-            return true;
-        }
-
-        ItemStack mainHand =
-                player.getMainHandItem();
-
-        ItemStack offHand =
-                player.getOffhandItem();
-
-        if (!mainHand.isEmpty()
-                && mainHand.getUseAnimation()
-                != UseAnim.NONE) {
-            return true;
-        }
-
-        return !offHand.isEmpty()
-                && offHand.getUseAnimation()
-                != UseAnim.NONE;
     }
 
     @Override
@@ -1162,7 +1167,7 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
         player.level().playSound(
                 null,
                 player.blockPosition(),
-                ModSounds.LAUNCHER_SHOOT.get(),
+                ModSounds.LAUNCHER_SHOOT,
                 SoundSource.PLAYERS,
                 soundVolume,
                 soundPitch
@@ -1348,7 +1353,7 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
         player.level().playSound(
                 null,
                 player.blockPosition(),
-                ModSounds.LAUNCHER_BURST.get(),
+                ModSounds.LAUNCHER_BURST,
                 SoundSource.PLAYERS,
                 soundVolume,
                 soundPitch
@@ -1444,7 +1449,7 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
         player.level().playSound(
                 null,
                 player.blockPosition(),
-                ModSounds.LAUNCHER_BURST.get(),
+                ModSounds.LAUNCHER_BURST,
                 SoundSource.PLAYERS,
                 soundVolume,
                 soundPitch

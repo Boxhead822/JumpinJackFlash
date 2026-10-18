@@ -34,7 +34,7 @@ public class JJFSpitEntity extends ThrowableProjectile {
             LivingEntity owner
     ) {
         super(
-                ModEntities.JJF_SPIT.get(),
+                ModEntities.JJF_SPIT,
                 owner,
                 level
         );
@@ -75,8 +75,7 @@ public class JJFSpitEntity extends ThrowableProjectile {
         }
 
         if (startPos != null
-                && position().distanceTo(startPos)
-                >= MAX_RANGE) {
+                && position().distanceTo(startPos) >= MAX_RANGE) {
             discard();
         }
     }
@@ -85,6 +84,10 @@ public class JJFSpitEntity extends ThrowableProjectile {
     protected void onHitEntity(
             EntityHitResult result
     ) {
+        if (level().isClientSide()) {
+            return;
+        }
+
         Entity target =
                 result.getEntity();
 
@@ -92,6 +95,12 @@ public class JJFSpitEntity extends ThrowableProjectile {
                 getOwner();
 
         if (!(target instanceof LivingEntity living)) {
+            discard();
+            return;
+        }
+
+        if (owner != null
+                && owner.getUUID().equals(living.getUUID())) {
             discard();
             return;
         }
@@ -127,16 +136,18 @@ public class JJFSpitEntity extends ThrowableProjectile {
         }
 
         state.resetZeroGravityTicks();
+        state.resetAirPressureTicks();
+        state.setRestorationTicks(0);
 
         living.setNoGravity(true);
         living.fallDistance = 0.0F;
 
-        Vec3 spitMotion =
+        Vec3 motion =
                 getDeltaMovement();
 
-        if (spitMotion.lengthSqr() > 0.0001D) {
+        if (motion.lengthSqr() > 0.0001D) {
             Vec3 push =
-                    spitMotion.normalize()
+                    motion.normalize()
                             .scale(0.12D);
 
             living.setDeltaMovement(
@@ -149,6 +160,7 @@ public class JJFSpitEntity extends ThrowableProjectile {
             );
 
             living.hasImpulse = true;
+            living.hurtMarked = true;
         }
 
         spawnImpactParticles(
@@ -162,15 +174,17 @@ public class JJFSpitEntity extends ThrowableProjectile {
     protected void onHitBlock(
             BlockHitResult result
     ) {
-        spawnMissParticles();
+        if (!level().isClientSide()) {
+            spawnMissParticles();
+        }
+
         discard();
     }
 
     private void spawnImpactParticles(
             LivingEntity target
     ) {
-        if (!(level()
-                instanceof ServerLevel server)) {
+        if (!(level() instanceof ServerLevel server)) {
             return;
         }
 
@@ -178,8 +192,7 @@ public class JJFSpitEntity extends ThrowableProjectile {
                 ParticleTypes.SPLASH,
                 target.getX(),
                 target.getY()
-                        + target.getBbHeight()
-                        * 0.5D,
+                        + target.getBbHeight() * 0.5D,
                 target.getZ(),
                 12,
                 0.25D,
@@ -190,8 +203,7 @@ public class JJFSpitEntity extends ThrowableProjectile {
     }
 
     private void spawnMissParticles() {
-        if (!(level()
-                instanceof ServerLevel server)) {
+        if (!(level() instanceof ServerLevel server)) {
             return;
         }
 

@@ -13,7 +13,7 @@ import net.minecraft.resources.ResourceLocation;
 public class JJFSpitRenderer extends EntityRenderer<JJFSpitEntity> {
 
     private static final ResourceLocation TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(
+            new ResourceLocation(
                     "minecraft",
                     "textures/entity/llama/spit.png"
             );
