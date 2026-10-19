@@ -11,6 +11,8 @@ import com.example.jjf.zero_gravity.ZeroGravitySource;
 import com.example.jjf.zero_gravity.ZeroGravityState;
 import com.example.jjf.zero_gravity.ZeroGravitySystem;
 import net.hydra.jojomod.client.StandIcons;
+import net.hydra.jojomod.access.IPlayerEntity;
+import net.hydra.jojomod.item.MaxStandDiscItem;
 import net.hydra.jojomod.entity.stand.StandEntity;
 import net.hydra.jojomod.event.index.PowerIndex;
 import net.hydra.jojomod.event.powers.StandPowers;
@@ -121,46 +123,44 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
     private static final ResourceLocation ZERO_GRAVITY_ON =
             new ResourceLocation(
                     "jjf",
-                    "textures/gui/icons/jjf/zero_gravity_on.png"
+                    "textures/gui/jjf/zero_gravity_on.png"
             );
-
 
     private static final ResourceLocation LOADING_ICON =
             new ResourceLocation(
                     "jjf",
-                    "textures/gui/icons/jjf/load.png"
+                    "textures/gui/jjf/load.png"
             );
 
     private static final ResourceLocation SHOOTING_ICON =
             new ResourceLocation(
                     "jjf",
-                    "textures/gui/icons/jjf/shoot.png"
+                    "textures/gui/jjf/shoot.png"
             );
 
     private static final ResourceLocation UNLOADING_ICON =
             new ResourceLocation(
                     "jjf",
-                    "textures/gui/icons/jjf/unload.png"
+                    "textures/gui/jjf/unload.png"
             );
 
     private static final ResourceLocation SPIT_ICON =
             new ResourceLocation(
                     "jjf",
-                    "textures/gui/icons/jjf/spit.png"
+                    "textures/gui/jjf/spit.png"
             );
 
     private static final ResourceLocation PUNCH_ICON =
             new ResourceLocation(
                     "jjf",
-                    "textures/gui/icons/jjf/punch.png"
+                    "textures/gui/jjf/punch.png"
             );
 
     private static final ResourceLocation GUARD_ICON =
             new ResourceLocation(
                     "jjf",
-                    "textures/gui/icons/jjf/guard.png"
+                    "textures/gui/jjf/guard.png"
             );
-
     private boolean jjf$skill4WasDown = false;
     private int jjf$loadHoldTicks = 0;
 
@@ -327,6 +327,8 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
             return;
         }
 
+        jjf$useWasDown = false;
+        jjf$useHoldTicks = 0;
         jjf$spinAttackHeld = true;
         jjf$spinAttackTicks = 0;
         this.attackTimeDuring = 0;
@@ -338,6 +340,7 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
         animateStand(StandEntity.BARRAGE_CHARGE);
     }
 
+
     @Override
     public void tickPower() {
         super.tickPower();
@@ -345,6 +348,9 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
         if (!jjf$spinAttackHeld) {
             return;
         }
+
+        this.poseStand(net.hydra.jojomod.event.index.OffsetIndex.ATTACK);
+        animateStand(StandEntity.BARRAGE_CHARGE);
 
         if (!(this.getSelf() instanceof Player)) {
             return;
@@ -512,6 +518,11 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
             boolean keyIsDown,
             Options options
     ) {
+        if (jjf$spinAttackHeld) {
+            jjf$useWasDown = false;
+            jjf$useHoldTicks = 0;
+            return;
+        }
         if (!(getSelf() instanceof Player player)) {
             return;
         }
@@ -523,7 +534,7 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
         Minecraft minecraft =
                 Minecraft.getInstance();
 
-        if (minecraft.hitResult != null
+        if (!jjf$useWasDown && minecraft.hitResult != null
                 && minecraft.hitResult.getType()
                 == HitResult.Type.BLOCK) {
 
@@ -567,11 +578,16 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
 
     @Override
     public boolean clickRelease() {
-        return jjf$useWasDown;
+        return jjf$useWasDown && !jjf$spinAttackHeld;
     }
 
     @Override
     public boolean onClickRelease() {
+        if (jjf$spinAttackHeld) {
+            jjf$useWasDown = false;
+            jjf$useHoldTicks = 0;
+            return false;
+        }
         if (!jjf$useWasDown) {
             return false;
         }
@@ -899,7 +915,32 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
                 || stack.is(Items.NAUTILUS_SHELL)
                 || stack.is(Items.ECHO_SHARD)
 
-                || isConcretePowder(stack);
+                || isConcretePowder(stack)
+                || stack.is(Items.DIRT)
+                || stack.is(Items.COARSE_DIRT)
+                || stack.is(Items.GRAVEL)
+                || stack.is(Items.CLAY_BALL)
+                || stack.is(Items.BRICK)
+                || stack.is(Items.NETHER_BRICK)
+                || stack.is(Items.BONE)
+                || stack.is(Items.BONE_MEAL)
+                || stack.is(Items.FLINT)
+                || stack.is(Items.CACTUS)
+                || stack.is(Items.SWEET_BERRIES)
+                || stack.is(Items.GLOW_BERRIES)
+                || stack.is(Items.SLIME_BLOCK)
+                || stack.is(Items.SPONGE)
+                || stack.is(Items.WET_SPONGE)
+                || stack.is(Items.SCUTE)
+                || stack.is(Items.RABBIT_FOOT)
+                || stack.is(Items.PHANTOM_MEMBRANE)
+                || stack.is(Items.SHULKER_SHELL)
+                || stack.is(Items.END_ROD)
+                || stack.is(Items.BASALT)
+                || stack.is(Items.LIGHTNING_ROD)
+                || stack.is(Items.COPPER_INGOT)
+                || stack.is(Items.CHAIN)
+                || stack.is(Items.FISHING_ROD);
     }
 
     private boolean isConcretePowder(
@@ -990,6 +1031,35 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
         return 1.0F;
     }
 
+    private int jjf$getRequiredAmmoLevel(ItemStack item) {
+        if (item.is(Items.TNT) || item.is(Items.ANVIL)
+                || item.is(Items.OBSIDIAN) || item.is(Items.TRIDENT)
+                || item.is(Items.SHULKER_SHELL) || item.is(Items.LIGHTNING_ROD)
+                || item.is(Items.ECHO_SHARD) || item.is(Items.DRAGON_BREATH)
+                || item.is(Items.NETHERITE_SCRAP)) return 7;
+        if (item.is(Items.FIRE_CHARGE) || item.is(Items.LAVA_BUCKET)
+                || item.is(Items.FIREWORK_ROCKET) || item.is(Items.BASALT)
+                || item.is(Items.ENDER_PEARL) || item.is(Items.CHAIN)
+                || item.is(Items.FISHING_ROD) || item.is(Items.SLIME_BLOCK)
+                || item.is(Items.POINTED_DRIPSTONE) || item.is(Items.AMETHYST_SHARD)) return 5;
+        if (item.is(Items.GRAVEL) || item.is(Items.BRICK)
+                || item.is(Items.NETHER_BRICK) || item.is(Items.FLINT)
+                || item.is(Items.CACTUS) || item.is(Items.SCUTE)
+                || item.is(Items.COPPER_INGOT) || item.is(Items.END_ROD)
+                || item.is(Items.MAGMA_CREAM)) return 3;
+        return 1;
+    }
+
+    private boolean jjf$canLoadAmmo(Player player, int requiredLevel) {
+        if (player.isCreative()) return true;
+        if (player instanceof StandUser user) {
+            ItemStack disc = user.roundabout$getStandDisc();
+            if (!disc.isEmpty() && disc.getItem() instanceof MaxStandDiscItem) return true;
+        }
+        return player instanceof IPlayerEntity access
+                && access.roundabout$getStandLevel() >= requiredLevel;
+    }
+
     private void loadHeldItem(
             Player player
     ) {
@@ -1005,6 +1075,15 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
                 player.getMainHandItem();
 
         if (!isSupportedAmmo(held)) {
+            return;
+        }
+
+        int requiredLevel = jjf$getRequiredAmmoLevel(held);
+        if (!jjf$canLoadAmmo(player, requiredLevel)) {
+            player.displayClientMessage(
+                    Component.literal("You need JJF development level " + requiredLevel + " to load this."),
+                    true
+            );
             return;
         }
 

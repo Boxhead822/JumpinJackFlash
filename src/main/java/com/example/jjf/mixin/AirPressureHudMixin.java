@@ -20,7 +20,7 @@ public class AirPressureHudMixin {
     private static final ResourceLocation TEXTURE =
             new ResourceLocation(
                     "jjf",
-                    "textures/gui/air_pressure_meter.png"
+                    "textures/gui/jjf/air_pressure_meter.png"
             );
 
     private static final int WIDTH = 30;
