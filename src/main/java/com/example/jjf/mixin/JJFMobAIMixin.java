@@ -1,3 +1,4 @@
+
 package com.example.jjf.mixin;
 
 import com.example.jjf.entity.projectile.JJFSpitEntity;
@@ -12,16 +13,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(PowersJumpinJackFlash.class)
+@Mixin(value = PowersJumpinJackFlash.class, remap = false)
 public class JJFMobAIMixin {
 
-    @Inject(
-            method = "tickPower",
-            at = @At("TAIL")
-    )
-    private void jjf$mobAI(
-            CallbackInfo ci
-    ) {
+    @Inject(method = "tickPower", at = @At("TAIL"), remap = false)
+    private void jjf$mobAI(CallbackInfo ci) {
         PowersJumpinJackFlash powers =
                 (PowersJumpinJackFlash) (Object) this;
 
@@ -33,80 +29,54 @@ public class JJFMobAIMixin {
             return;
         }
 
-        LivingEntity target =
-                mob.getTarget();
+        LivingEntity target = mob.getTarget();
 
-        if (target == null
-                || !target.isAlive()) {
+        if (target == null || !target.isAlive()) {
             return;
         }
 
-        if (powers.getActivePower()
-                != PowerIndex.NONE) {
+        if (powers.getActivePower() != PowerIndex.NONE) {
             return;
         }
 
-        double distance =
-                mob.distanceTo(target);
+        double distance = mob.distanceTo(target);
 
-        if (distance < 6.0D
-                || distance > 20.0D) {
+        if (distance < 6.0D || distance > 20.0D) {
             return;
         }
 
         if (target instanceof ZeroGravityAccess access
-                && access.jjf$getZeroGravityState()
-                .isSpread()) {
+                && access.jjf$getZeroGravityState().isSpread()) {
             return;
         }
 
-        if (powers.onCooldown(
-                PowerIndex.SKILL_2
-        )) {
+        if (powers.onCooldown(PowerIndex.SKILL_2)) {
             return;
         }
 
-        fireSpit(
-                mob,
-                target
-        );
-
-        powers.setCooldown(
-                PowerIndex.SKILL_2,
-                80
-        );
+        fireSpit(mob, target);
+        powers.setCooldown(PowerIndex.SKILL_2, 80);
     }
 
-    private void fireSpit(
-            Mob mob,
-            LivingEntity target
-    ) {
-        JJFSpitEntity spit =
-                new JJFSpitEntity(
-                        mob.level(),
-                        mob
-                );
+    private void fireSpit(Mob mob, LivingEntity target) {
+        JJFSpitEntity spit = new JJFSpitEntity(
+                mob.level(),
+                mob
+        );
 
-        Vec3 start =
-                new Vec3(
-                        mob.getX(),
-                        mob.getEyeY() - 0.12D,
-                        mob.getZ()
-                );
+        Vec3 start = new Vec3(
+                mob.getX(),
+                mob.getEyeY() - 0.12D,
+                mob.getZ()
+        );
 
-        Vec3 direction =
-                new Vec3(
-                        target.getX(),
-                        target.getEyeY(),
-                        target.getZ()
-                )
-                        .subtract(start)
-                        .normalize();
+        Vec3 direction = new Vec3(
+                target.getX(),
+                target.getEyeY(),
+                target.getZ()
+        ).subtract(start).normalize();
 
-        start =
-                start.add(
-                        direction.scale(0.35D)
-                );
+        start = start.add(direction.scale(0.35D));
 
         spit.setPos(
                 start.x,
@@ -122,7 +92,6 @@ public class JJFMobAIMixin {
                 0.6F
         );
 
-        mob.level()
-                .addFreshEntity(spit);
+        mob.level().addFreshEntity(spit);
     }
 }

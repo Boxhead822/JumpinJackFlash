@@ -56,6 +56,8 @@ public class JJFProjectileEntity extends ThrowableItemProjectile {
                     0.75F
             );
 
+    private static final java.util.Map<LivingEntity, Long> JJF_GRIT_COOLDOWNS = new java.util.WeakHashMap<>();
+
     private static final double MAX_RANGE = 48.0D;
     private static final int MAX_LIFE_TICKS = 100;
 
@@ -224,6 +226,11 @@ public class JJFProjectileEntity extends ThrowableItemProjectile {
 
         if (target instanceof LivingEntity living) {
             applyZeroGravityImpact(living);
+        }
+
+        if (jjf$specialEntityHit(target)) {
+            discard();
+            return;
         }
 
         if (isSpawnEgg()) {
@@ -584,6 +591,11 @@ public class JJFProjectileEntity extends ThrowableItemProjectile {
             return;
         }
 
+        if (jjf$specialBlockHit(result)) {
+            discard();
+            return;
+        }
+
         if (isSpawnEgg()) {
             spawnEgg(result.getBlockPos().relative(result.getDirection()));
             discard();
@@ -820,6 +832,124 @@ public class JJFProjectileEntity extends ThrowableItemProjectile {
         }
 
         super.onHitBlock(result);
+    }
+
+    private boolean jjf$specialEntityHit(Entity target) {
+        ItemStack ammo = getItem();
+        if (ammo.is(Items.DIRT) || ammo.is(Items.COARSE_DIRT)) {
+            applyEffect(target, MobEffects.BLINDNESS, ammo.is(Items.DIRT) ? 40 : 20, 0);
+            if (target instanceof LivingEntity living) {
+                long now = living.level().getGameTime();
+                if (now - JJF_GRIT_COOLDOWNS.getOrDefault(living, -100L) >= 20L) {
+                    JJF_GRIT_COOLDOWNS.put(living, now);
+                    for (net.minecraft.world.entity.EquipmentSlot slot : new net.minecraft.world.entity.EquipmentSlot[]{
+                            net.minecraft.world.entity.EquipmentSlot.HEAD,
+                            net.minecraft.world.entity.EquipmentSlot.CHEST,
+                            net.minecraft.world.entity.EquipmentSlot.LEGS,
+                            net.minecraft.world.entity.EquipmentSlot.FEET}) {
+                        ItemStack armor = living.getItemBySlot(slot);
+                        if (armor.isDamageableItem()) armor.hurtAndBreak(
+                                ammo.is(Items.DIRT) ? 1 : 2, living,
+                                entity -> entity.broadcastBreakEvent(slot));
+                    }
+                }
+            }
+        } else if (ammo.is(Items.GRAVEL)) {
+            hurtTarget(target, 1.5F);
+            pushTarget(target, 0.40D);
+        } else if (ammo.is(Items.CLAY_BALL)) {
+            applyEffect(target, MobEffects.MOVEMENT_SLOWDOWN, 50, 1);
+        } else if (ammo.is(Items.BRICK) || ammo.is(Items.NETHER_BRICK)) {
+            hurtTarget(target, 2.5F);
+            pushTarget(target, 0.55D);
+            if (ammo.is(Items.NETHER_BRICK)) target.setSecondsOnFire(2);
+        } else if (ammo.is(Items.BONE)) {
+            hurtTarget(target, target.getType().getCategory() == net.minecraft.world.entity.MobCategory.MONSTER ? 2.5F : 1.0F);
+            pushTarget(target, 0.40D);
+        } else if (ammo.is(Items.BONE_MEAL)) {
+            applyEffect(target, MobEffects.CONFUSION, 40, 0);
+        } else if (ammo.is(Items.FLINT)) {
+            hurtTarget(target, 1.0F);
+            applyBleed(target, 55, 0);
+        } else if (ammo.is(Items.CACTUS)) {
+            hurtTarget(target, 1.0F);
+            applyEffect(target, MobEffects.POISON, 50, 0);
+        } else if (ammo.is(Items.SWEET_BERRIES)) {
+            hurtTarget(target, 0.5F);
+            applyEffect(target, MobEffects.MOVEMENT_SLOWDOWN, 25, 0);
+        } else if (ammo.is(Items.GLOW_BERRIES)) {
+            hurtTarget(target, 0.5F);
+            applyEffect(target, MobEffects.GLOWING, 80, 0);
+        } else if (ammo.is(Items.SLIME_BLOCK)) {
+            pushTarget(target, 1.0D);
+        } else if (ammo.is(Items.SPONGE)) {
+            pushTarget(target, 0.30D);
+        } else if (ammo.is(Items.WET_SPONGE)) {
+            target.clearFire();
+            pushTarget(target, 0.45D);
+        } else if (ammo.is(Items.SCUTE)) {
+            hurtTarget(target, 1.5F);
+            pushTarget(target, 0.35D);
+        } else if (ammo.is(Items.RABBIT_FOOT)) {
+            if (getOwner() instanceof LivingEntity living)
+                living.addEffect(new MobEffectInstance(MobEffects.JUMP, 90, 0));
+        } else if (ammo.is(Items.PHANTOM_MEMBRANE)) {
+            applyEffect(target, MobEffects.SLOW_FALLING, 90, 0);
+        } else if (ammo.is(Items.SHULKER_SHELL)) {
+            applyEffect(target, MobEffects.LEVITATION, 30, 0);
+        } else if (ammo.is(Items.END_ROD)) {
+            applyEffect(target, MobEffects.GLOWING, 100, 0);
+        } else if (ammo.is(Items.BASALT)) {
+            hurtTarget(target, 2.5F);
+            pushTarget(target, 0.90D);
+        } else if (ammo.is(Items.LIGHTNING_ROD)) {
+            if (level().isThundering() && level().canSeeSky(target.blockPosition())
+                    && level() instanceof ServerLevel server) {
+                net.minecraft.world.entity.LightningBolt bolt = net.minecraft.world.entity.EntityType.LIGHTNING_BOLT.create(server);
+                if (bolt != null) {
+                    bolt.moveTo(target.position());
+                    server.addFreshEntity(bolt);
+                }
+            } else {
+                applyEffect(target, MobEffects.GLOWING, 45, 0);
+            }
+        } else if (ammo.is(Items.COPPER_INGOT)) {
+            hurtTarget(target, target instanceof LivingEntity living && living.getArmorValue() > 0 ? 3.0F : 1.5F);
+        } else if (ammo.is(Items.CHAIN) || ammo.is(Items.FISHING_ROD)) {
+            if (getOwner() instanceof LivingEntity owner && target != owner) {
+                Vec3 pull = owner.position().subtract(target.position());
+                if (pull.lengthSqr() > 0.001D) {
+                    target.push(pull.normalize().x * 0.75D, 0.12D, pull.normalize().z * 0.75D);
+                }
+            }
+        } else {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean jjf$specialBlockHit(BlockHitResult hit) {
+        ItemStack ammo = getItem();
+        if (ammo.is(Items.END_ROD)) {
+            if (level() instanceof ServerLevel server)
+                server.sendParticles(ParticleTypes.END_ROD, getX(), getY(), getZ(), 12, 0.2D, 0.2D, 0.2D, 0.02D);
+            return true;
+        }
+        if (ammo.is(Items.WET_SPONGE)) {
+            spawnWaterParticles();
+            return true;
+        }
+        if (ammo.is(Items.LIGHTNING_ROD) && level().isThundering()
+                && level().canSeeSky(hit.getBlockPos().above())
+                && level() instanceof ServerLevel server) {
+            net.minecraft.world.entity.LightningBolt bolt = net.minecraft.world.entity.EntityType.LIGHTNING_BOLT.create(server);
+            if (bolt != null) {
+                bolt.moveTo(Vec3.atCenterOf(hit.getBlockPos().above()));
+                server.addFreshEntity(bolt);
+            }
+            return true;
+        }
+        return false;
     }
 
     private void hurtTarget(Entity target, float damage) {
