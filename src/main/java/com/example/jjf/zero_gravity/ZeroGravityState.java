@@ -8,21 +8,16 @@ public class ZeroGravityState {
 
     private ZeroGravitySource source = ZeroGravitySource.NONE;
     private UUID ownerUUID;
-
     private int zeroGravityTicks = 0;
     private int airPressureTicks = 0;
     private int outsideOwnerRangeTicks = 0;
-
     private float radius = 0.0F;
-
     private int restorationTicks = 0;
     private int swingImpulseCooldown = 0;
     private int zeroGravityToggleCooldown = 0;
     private int suctionLaunchSoundCooldown = 0;
-
     private boolean suctioned = false;
     private boolean suctionLaunchSoundEnabled = false;
-
     private Direction suctionSurface;
 
     public boolean isZeroGravity() {
@@ -43,7 +38,6 @@ public class ZeroGravityState {
 
     public void setSource(ZeroGravitySource source) {
         this.source = source;
-
         if (source != ZeroGravitySource.SPREAD) {
             resetAirPressureTicks();
             resetOutsideOwnerRangeTicks();
@@ -76,6 +70,10 @@ public class ZeroGravityState {
 
     public void incrementAirPressureTicks() {
         airPressureTicks++;
+    }
+
+    public void setAirPressureTicks(int ticks) {
+        airPressureTicks = Math.max(0, ticks);
     }
 
     public void resetAirPressureTicks() {
@@ -193,16 +191,12 @@ public class ZeroGravityState {
     public void clearZeroGravity() {
         source = ZeroGravitySource.NONE;
         ownerUUID = null;
-
         zeroGravityTicks = 0;
         airPressureTicks = 0;
         outsideOwnerRangeTicks = 0;
-
         radius = 0.0F;
-
         suctioned = false;
         suctionSurface = null;
-
         swingImpulseCooldown = 0;
     }
 }

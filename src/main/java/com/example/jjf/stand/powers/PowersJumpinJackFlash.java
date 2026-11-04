@@ -114,7 +114,7 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
     private boolean jjf$spinAttackHeld = false;
     private int jjf$spinAttackTicks = 0;
 
-    private static final ResourceLocation NORMAL_GRAVITY_ICON =
+private static final ResourceLocation NORMAL_GRAVITY_ICON =
             new ResourceLocation(
                     "roundabout",
                     "textures/mob_effect/gravity_flip.png"
@@ -400,16 +400,16 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
     @Override
     public void powerActivate(PowerContext context) {
         switch (context) {
-            case SKILL_1_NORMAL -> {
-                if (onCooldown(PowerIndex.SKILL_1)) {
+            case SKILL_1_NORMAL, SKILL_1_GUARD -> {
+                if (isHoldingSneak()) {
+                    if (this.getSelf().level().isClientSide()) {
+                        releaseSelfZeroGravity();
+                    }
+                    tryPowerPacket(POWER_RELEASE_SPREAD);
                     return;
                 }
 
-
-                if (isHoldingSneak()) {
-                    tryPowerPacket(
-                            POWER_RELEASE_SPREAD
-                    );
+                if (onCooldown(PowerIndex.SKILL_1)) {
                     return;
                 }
 
@@ -417,9 +417,14 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
                     toggleSelfZeroGravity();
                 }
 
-                tryPowerPacket(
-                        POWER_SELF_ZERO_GRAVITY
-                );
+                tryPowerPacket(POWER_SELF_ZERO_GRAVITY);
+            }
+
+            case SKILL_1_CROUCH, SKILL_1_CROUCH_GUARD -> {
+                if (this.getSelf().level().isClientSide()) {
+                    releaseSelfZeroGravity();
+                }
+                tryPowerPacket(POWER_RELEASE_SPREAD);
             }
 
             case SKILL_2_NORMAL -> {
@@ -647,11 +652,9 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
         }
 
         if (move == POWER_RELEASE_SPREAD) {
-            if (!this.getSelf()
-                    .level()
-                    .isClientSide()) {
-
+            if (!this.getSelf().level().isClientSide()) {
                 releaseOwnSpread();
+                releaseSelfZeroGravity();
             }
 
             return true;
@@ -2497,6 +2500,25 @@ public class PowersJumpinJackFlash extends NewPunchingStand {
             entity.setNoGravity(false);
             entity.fallDistance = 0.0F;
         }
+    }
+
+    private void releaseSelfZeroGravity() {
+        if (!(this.getSelf() instanceof ZeroGravityAccess access)) {
+            return;
+        }
+
+        ZeroGravityState state = access.jjf$getZeroGravityState();
+
+        if (!state.isSafeUserZeroGravity()
+                || !this.getSelf().getUUID().equals(state.getOwnerUUID())) {
+            return;
+        }
+
+        state.clearZeroGravity();
+        state.setRestorationTicks(20);
+        this.getSelf().setNoGravity(false);
+        this.getSelf().fallDistance = 0.0F;
+        this.getSelf().hasImpulse = true;
     }
 
     private void toggleSelfZeroGravity() {
